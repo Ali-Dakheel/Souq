@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for module:*)",
+      "Bash(do)",
+      "Bash(for dir:*)",
+      "Bash(mkdir -p \"app/Modules/$module/$dir\")",
+      "Bash(touch \"app/Modules/$module/$dir/.gitkeep\")"
+    ]
+  }
+}
