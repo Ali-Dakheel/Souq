@@ -11,10 +11,16 @@ use App\Modules\Cart\Events\CartItemRemoved;
 use App\Modules\Cart\Events\CartMerged;
 use App\Modules\Cart\Events\CouponApplied;
 use App\Modules\Cart\Events\CouponRemoved;
+use App\Modules\Cart\Listeners\ClearCartOnPaymentCaptured;
 use App\Modules\Cart\Listeners\LogCartActivity;
+use App\Modules\Cart\Listeners\RecordCouponUsageOnOrderPlaced;
+use App\Modules\Cart\Listeners\ReleaseCouponUsageOnPaymentFailed;
 use App\Modules\Cart\Listeners\UpdateCartOnMerge;
 use App\Modules\Cart\Services\CartService;
 use App\Modules\Cart\Services\CouponService;
+use App\Modules\Orders\Events\OrderPlaced;
+use App\Modules\Payments\Events\PaymentCaptured;
+use App\Modules\Payments\Events\PaymentFailed;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -42,6 +48,10 @@ class CartServiceProvider extends ServiceProvider
         Event::listen(CartMerged::class, [$logger, 'handleCartMerged']);
         Event::listen(CartAbandoned::class, [$logger, 'handleCartAbandoned']);
         Event::listen(CartMerged::class, [UpdateCartOnMerge::class, 'handle']);
+
+        Event::listen(OrderPlaced::class,    [RecordCouponUsageOnOrderPlaced::class, 'handle']);
+        Event::listen(PaymentFailed::class,  [ReleaseCouponUsageOnPaymentFailed::class, 'handle']);
+        Event::listen(PaymentCaptured::class, [ClearCartOnPaymentCaptured::class, 'handle']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([PruneExpiredCartsCommand::class]);

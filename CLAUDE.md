@@ -144,6 +144,7 @@ bahrain-ecomm/
 | `CouponApplied` | Cart | Cart (log) |
 | `CouponRemoved` | Cart | Cart (log) |
 | `CartAbandoned` | Cart | Cart (log — email stub TODO) |
+| `OrderCancelled` | Orders | Inventory (release reservation), Cart (release coupon usage) |
 
 ---
 
@@ -195,7 +196,7 @@ bahrain-ecomm/
 - [x] Catalog module — products, variants, categories, attributes, reviews (full CRUD + feature tests)
 - [x] Customers module — auth (register/login/logout/password reset), profiles, addresses (30/30 tests)
 - [x] Cart module — guest (X-Cart-Session header, 30-day TTL) + authenticated (DB), merge on login/register, full coupon system, VAT 10%, abandonment tracking, prune job
-- [ ] Orders module — checkout, order lifecycle, status history
+- [x] Orders module — checkout, order lifecycle, status history (42/42 tests) + full frontend (checkout page, orders list, order detail, cancel dialog, address selector, status timeline)
 - [ ] Payments module — Tap Payments redirect flow, webhooks, refunds
 - [ ] Filament admin panel
 - [ ] Notifications module — emails via Resend (order confirm, receipt, shipping)
@@ -286,3 +287,15 @@ AuthService (Customers module) needs CartService (Cart module) for merge-on-logi
 
 **`CartService::mergeCart()` already fires `CartMerged` — do not re-dispatch in AuthService**
 Calling `mergeCart()` and then also dispatching `CartMerged` doubles the event. AuthService should only call `mergeCart()`; CartService owns the event dispatch.
+
+**`OrderStatusHistory` model needs explicit `$table = 'order_status_history'`**
+The migration creates the table as `order_status_history` (singular — matches the noun). Eloquent auto-pluralizes to `order_status_histories`. Always set `protected $table` explicitly on models whose table name doesn't follow the `snake_plural` convention.
+
+**Capture `$oldStatus` BEFORE calling `$model->update()` — Eloquent calls `syncOriginal()` inside save**
+After `$order->update(['order_status' => 'cancelled'])`, calling `$order->getOriginal('order_status')` returns `'cancelled'`, not the previous value. Always do `$oldStatus = $order->order_status;` before the update, then pass it explicitly to `recordStatusChange()`.
+
+**`InvalidArgumentException` from service layer must be caught in controller and re-thrown as `ValidationException`**
+`OrderService::cancelOrder()` throws `\InvalidArgumentException` for non-cancellable orders. Without a catch block the API returns 500. Wrap with `try/catch (\InvalidArgumentException $e)` and re-throw as `ValidationException::withMessages(['order' => [$e->getMessage()]])` to return 422.
+
+**Zod v4 `z.record()` requires two arguments: `z.record(keySchema, valueSchema)`**
+`z.record(z.string())` (one arg) was valid in Zod v3 but errors in v4 with "Expected 2-3 arguments, but got 1". Use `z.record(z.string(), z.string())` for string-valued records. This affects variant_attributes and similar JSONB fields.

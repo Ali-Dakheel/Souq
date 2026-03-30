@@ -9,4 +9,13 @@ export const queryKeys = {
       ["coupons", "active", { categoryId, productId }] as const,
     validate: (code: string) => ["coupons", "validate", code] as const,
   },
+  orders: {
+    all: ["orders"] as const,
+    list: (page?: number, status?: string) =>
+      ["orders", "list", { page, status }] as const,
+    detail: (orderNumber: string) => ["orders", "detail", orderNumber] as const,
+  },
+  addresses: {
+    all: ["addresses"] as const,
+  },
 } as const
