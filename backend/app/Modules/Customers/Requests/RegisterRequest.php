@@ -25,6 +25,7 @@ class RegisterRequest extends FormRequest
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'preferred_locale' => ['sometimes', 'string', 'in:ar,en'],
             'marketing_consent' => ['sometimes', 'boolean'],
+            'guest_session_id' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

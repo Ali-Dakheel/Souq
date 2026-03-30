@@ -40,6 +40,7 @@ class AuthController extends Controller
         $user = $this->authService->login(
             $request->string('email')->toString(),
             $request->string('password')->toString(),
+            $request->string('guest_session_id')->toString() ?: null,
         );
 
         return (new UserResource($user))

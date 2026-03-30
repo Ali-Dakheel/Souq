@@ -21,6 +21,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'guest_session_id' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }
 }

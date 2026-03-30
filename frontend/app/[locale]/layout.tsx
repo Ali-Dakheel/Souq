@@ -4,7 +4,7 @@ import { Geist_Mono } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
 import { notFound } from "next/navigation"
-import { ThemeProvider } from "@/components/theme-provider"
+import { Providers } from "@/components/Providers"
 import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "../globals.css"
@@ -53,7 +53,7 @@ export default async function LocaleLayout({
     >
       <body className="antialiased font-sans">
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider>{children}</ThemeProvider>
+          <Providers>{children}</Providers>
         </NextIntlClientProvider>
       </body>
     </html>

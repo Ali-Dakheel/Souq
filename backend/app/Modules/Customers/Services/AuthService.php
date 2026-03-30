@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Customers\Services;
 
 use App\Models\User;
+use App\Modules\Cart\Models\Cart;
+use App\Modules\Cart\Services\CartService;
 use App\Modules\Customers\Events\CustomerRegistered;
 use App\Modules\Customers\Events\PasswordReset;
 use App\Modules\Customers\Events\PasswordResetRequested;
@@ -20,8 +22,10 @@ class AuthService
 {
     /**
      * Register a new customer, create their profile, and fire CustomerRegistered.
+     * If a guest_session_id is provided, CartMerged is dispatched so the Cart
+     * module can merge the guest cart into the new user's cart.
      *
-     * @param  array{name: string, email: string, password: string, phone?: string, preferred_locale?: string, marketing_consent?: bool}  $data
+     * @param  array{name: string, email: string, password: string, phone?: string, preferred_locale?: string, marketing_consent?: bool, guest_session_id?: string}  $data
      */
     public function register(array $data): User
     {
@@ -42,15 +46,22 @@ class AuthService
 
         CustomerRegistered::dispatch($user);
 
+        $guestSessionId = $data['guest_session_id'] ?? null;
+        if ($guestSessionId) {
+            $this->dispatchCartMergeIfNeeded($user, $guestSessionId);
+        }
+
         return $user;
     }
 
     /**
      * Authenticate a customer via session guard.
+     * If a guest_session_id is provided, CartMerged is dispatched so the Cart
+     * module can merge the guest cart into the authenticated user's cart.
      *
      * @throws AuthenticationException
      */
-    public function login(string $email, string $password): User
+    public function login(string $email, string $password, ?string $guestSessionId = null): User
     {
         if (! Auth::attempt(['email' => $email, 'password' => $password])) {
             throw new AuthenticationException('Invalid credentials.');
@@ -59,6 +70,10 @@ class AuthService
         /** @var User $user */
         $user = Auth::user();
         $user->load('profile');
+
+        if ($guestSessionId) {
+            $this->dispatchCartMergeIfNeeded($user, $guestSessionId);
+        }
 
         return $user;
     }
@@ -119,5 +134,28 @@ class AuthService
     public function verifyPassword(User $user, string $plainPassword): bool
     {
         return Hash::check($plainPassword, $user->password);
+    }
+
+    /**
+     * If a guest cart exists for the given session, resolve CartService and
+     * perform the merge. CartService::mergeCart() fires CartMerged internally.
+     * Using app() rather than constructor injection avoids a circular
+     * Customers → Cart dependency at the provider level.
+     */
+    private function dispatchCartMergeIfNeeded(User $user, string $guestSessionId): void
+    {
+        $guestCart = Cart::where('session_id', $guestSessionId)
+            ->whereNull('user_id')
+            ->first();
+
+        if (! $guestCart) {
+            return;
+        }
+
+        /** @var CartService $cartService */
+        $cartService = app(CartService::class);
+        $userCart = $cartService->getOrCreateCart($user->id, null);
+
+        $cartService->mergeCart($guestCart, $userCart, $user);
     }
 }

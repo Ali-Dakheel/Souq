@@ -138,6 +138,12 @@ bahrain-ecomm/
 | `OrderFulfilled` | Orders | Notifications (shipping update) |
 | `StockLow` | Inventory | Notifications (admin alert) |
 | `OrderRefunded` | Payments | Orders (update status), Inventory (return stock) |
+| `CartItemAdded` | Cart | Cart (log) |
+| `CartItemRemoved` | Cart | Cart (log) |
+| `CartMerged` | Cart | Cart (log + Phase 3 WebSocket stub) |
+| `CouponApplied` | Cart | Cart (log) |
+| `CouponRemoved` | Cart | Cart (log) |
+| `CartAbandoned` | Cart | Cart (log — email stub TODO) |
 
 ---
 
@@ -188,7 +194,7 @@ bahrain-ecomm/
 
 - [x] Catalog module — products, variants, categories, attributes, reviews (full CRUD + feature tests)
 - [x] Customers module — auth (register/login/logout/password reset), profiles, addresses (30/30 tests)
-- [ ] Cart module — guest (session) + authenticated (DB), merge on login, coupon stub
+- [x] Cart module — guest (X-Cart-Session header, 30-day TTL) + authenticated (DB), merge on login/register, full coupon system, VAT 10%, abandonment tracking, prune job
 - [ ] Orders module — checkout, order lifecycle, status history
 - [ ] Payments module — Tap Payments redirect flow, webhooks, refunds
 - [ ] Filament admin panel
@@ -265,3 +271,18 @@ This bites GET endpoints that lazily create records (e.g. `ProfileController::sh
 
 **`php artisan make:test` double-nests paths under `tests/Feature/`**
 Running `php artisan make:test Feature/Customers/FooTest` creates `tests/Feature/Feature/Customers/FooTest.php`. Write test files directly with the Write tool to `tests/Feature/Customers/` to avoid the duplicate nesting.
+
+**Phase 1 `coupons` schema conflicts with any new cart migrations that try to re-create these tables**
+Phase 1 already created `coupons`, and uses `coupon_applicable_items` (polymorphic: `itemable_type`/`itemable_id`) — NOT separate `coupon_categories`/`coupon_variants` tables. Delete any cart-session migrations that duplicate these tables. Only `cart_abandonments` is a genuinely new table for the Cart module.
+
+**Phase 1 coupon column names differ from common conventions — use these exact names**
+`starts_at`/`expires_at` (not `valid_from`/`valid_until`), `discount_type` ENUM values are `'percentage'` and `'fixed_fils'` (not `'fixed_amount'`), `minimum_order_amount_fils` (not `minimum_order_fils`), `maximum_discount_fils`, `max_uses_global`, `max_uses_per_user`. There is NO `current_uses` counter — count rows in `coupon_usage` table instead.
+
+**Coupons scope to products, not variants**
+`coupon_applicable_items` stores `itemable_type = 'product'` or `'category'` — never `'variant'`. CartService helpers must extract `product_ids` (via `variant->product_id`) and `category_ids` from cart items; CouponService filters applicableItems by `itemable_type`.
+
+**Cross-module service dependency: use `app()` resolution, not constructor injection**
+AuthService (Customers module) needs CartService (Cart module) for merge-on-login. Constructor injection creates a provider-level circular dependency. Use `app(CartService::class)` inside the method body instead — it resolves lazily from the container with no circular issue.
+
+**`CartService::mergeCart()` already fires `CartMerged` — do not re-dispatch in AuthService**
+Calling `mergeCart()` and then also dispatching `CartMerged` doubles the event. AuthService should only call `mergeCart()`; CartService owns the event dispatch.
