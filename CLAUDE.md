@@ -168,9 +168,7 @@ bahrain-ecomm/
 
 ## 8. Current build phase
 
-**PHASE 1 — Foundation** (current)
-
-Update checkboxes as tasks complete:
+**PHASE 1 — Foundation** (complete)
 
 - [x] Repository initialized with frontend/ and backend/ structure
 - [x] `pnpm dlx shadcn@latest init -t next` run inside frontend/
@@ -186,10 +184,15 @@ Update checkboxes as tasks complete:
 - [x] GitHub Actions CI (lint + tests + smoke)
 - [ ] Coolify deploy pipeline connected — requires COOLIFY_WEBHOOK_TOKEN + COOLIFY_WEBHOOK_URL secrets set in GitHub repo settings
 
-Do NOT start Phase 2 until all Phase 1 boxes are checked.
+**PHASE 2 — Commerce** (in progress)
 
-**PHASE 2 — Commerce** (locked until Phase 1 complete)
-Catalog, cart, checkout, Tap Payments, Filament admin, emails, orders
+- [x] Catalog module — products, variants, categories, attributes, reviews (full CRUD + feature tests)
+- [x] Customers module — auth (register/login/logout/password reset), profiles, addresses (30/30 tests)
+- [ ] Cart module — guest (session) + authenticated (DB), merge on login, coupon stub
+- [ ] Orders module — checkout, order lifecycle, status history
+- [ ] Payments module — Tap Payments redirect flow, webhooks, refunds
+- [ ] Filament admin panel
+- [ ] Notifications module — emails via Resend (order confirm, receipt, shipping)
 
 **PHASE 3 — Hardening** (locked until Phase 2 complete)
 Blue-green deploy, k6 load tests, security audit, Lighthouse CI, full RTL audit
@@ -251,3 +254,14 @@ The `ci.yml` backend job does `cp .env.testing .env` before `key:generate`. With
 
 **Migration ordering: `categories` before `products`, `variants` before `inventory_items`**
 Foreign key constraints enforce this. The timestamp prefix `2026_03_28_00000N_` must reflect the dependency order within the same day.
+
+### Phase 2 — 2026-03-28 / 2026-03-30
+
+**`api` middleware group has no session — never call `$request->session()` in api controllers**
+The `api` middleware group does not include `StartSession`, so any call to `$request->session()` throws `RuntimeException: Session store not set on request`. `SessionGuard::updateSession()` handles session migration internally during `Auth::attempt()` — manual `regenerate()`/`invalidate()` calls are redundant and break tests. `Auth::guard('web')->logout()` also handles session clearing internally.
+
+**`JsonResource` auto-returns 201 when the underlying model's `wasRecentlyCreated` is true**
+This bites GET endpoints that lazily create records (e.g. `ProfileController::show()` which calls `firstOrCreate`). The resource infers 201 from the newly created model. Fix: always call `->response()->setStatusCode(200)` explicitly on resources returned from `show()` methods that may trigger lazy creation.
+
+**`php artisan make:test` double-nests paths under `tests/Feature/`**
+Running `php artisan make:test Feature/Customers/FooTest` creates `tests/Feature/Feature/Customers/FooTest.php`. Write test files directly with the Write tool to `tests/Feature/Customers/` to avoid the duplicate nesting.
