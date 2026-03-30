@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(plan)",
+      "Bash(vendor/bin/pint --dirty --format agent)",
+      "Bash(vendor/bin/pint --dirty --format agent app/Models/User.php app/Modules/Customers/)"
+    ]
+  }
+}
