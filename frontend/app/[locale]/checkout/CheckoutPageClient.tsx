@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { useTranslations, useLocale } from "next-intl"
 import { useAddresses, useCheckout } from "@/lib/api/ordersApi"
+import { useCreateCharge } from "@/lib/api/paymentsApi"
 import { useCart } from "@/lib/api/cartApi"
 import { useCheckoutStore } from "@/stores/checkoutStore"
 import { AddressSelector } from "@/components/orders/AddressSelector"
@@ -16,6 +18,7 @@ const PAYMENT_METHODS = [
 
 export function CheckoutPageClient() {
   const t = useTranslations("checkout")
+  const tp = useTranslations("payment")
   const locale = useLocale()
 
   const { data: addresses = [], isLoading: addrLoading } = useAddresses()
@@ -34,20 +37,48 @@ export function CheckoutPageClient() {
     setNotes,
   } = useCheckoutStore()
 
-  const checkout = useCheckout(locale)
+  const checkout = useCheckout()
+  const createCharge = useCreateCharge()
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const isLoading = addrLoading || cartLoading
+  const isSubmitting = checkout.isPending || createCharge.isPending
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!shippingAddressId) return
+    setErrorMsg(null)
 
-    checkout.mutate({
-      shipping_address_id: shippingAddressId,
-      billing_address_id: billingAddressId ?? shippingAddressId,
-      payment_method: paymentMethod,
-      notes: notes || undefined,
-    })
+    // Step 1: Create order
+    checkout.mutate(
+      {
+        shipping_address_id: shippingAddressId,
+        billing_address_id: billingAddressId ?? shippingAddressId,
+        payment_method: paymentMethod,
+        notes: notes || undefined,
+      },
+      {
+        onSuccess: (data) => {
+          const order = data.data
+          // Step 2: Create charge and redirect to Tap
+          createCharge.mutate(order.id, {
+            onSuccess: (chargeData) => {
+              if (chargeData.redirect_url) {
+                window.location.href = chargeData.redirect_url
+              }
+            },
+            onError: (err: unknown) => {
+              const error = err as { message?: string }
+              setErrorMsg(error.message ?? tp("charge_error"))
+            },
+          })
+        },
+        onError: (err: unknown) => {
+          const error = err as { message?: string }
+          setErrorMsg(error.message ?? t("error_generic"))
+        },
+      },
+    )
   }
 
   if (isLoading) {
@@ -167,10 +198,8 @@ export function CheckoutPageClient() {
                 </dl>
               )}
 
-              {checkout.isError && (
-                <p className="text-sm text-destructive">
-                  {(checkout.error as { message?: string })?.message ?? t("error_generic")}
-                </p>
+              {errorMsg && (
+                <p className="text-sm text-destructive">{errorMsg}</p>
               )}
 
               {!shippingAddressId && (
@@ -179,10 +208,10 @@ export function CheckoutPageClient() {
 
               <button
                 type="submit"
-                disabled={checkout.isPending || !shippingAddressId}
+                disabled={isSubmitting || !shippingAddressId}
                 className="w-full rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
               >
-                {checkout.isPending ? t("placing") : t("place_order")}
+                {isSubmitting ? t("placing") : t("place_order")}
               </button>
             </div>
           </aside>

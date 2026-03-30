@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'tap' => [
+        'secret_key'     => env('APP_ENV') === 'production'
+                              ? env('TAP_SECRET_KEY_LIVE')
+                              : env('TAP_SECRET_KEY_TEST'),
+        'webhook_secret' => env('TAP_WEBHOOK_SECRET'),
+        'base_url'       => env('TAP_API_BASE_URL', 'https://api.tap.company/v2'),
+    ],
+
 ];

@@ -64,9 +64,8 @@ export function useAddresses() {
 
 // ─── Checkout ─────────────────────────────────────────────────────────────────
 
-export function useCheckout(locale: string) {
+export function useCheckout() {
   const qc = useQueryClient()
-  const router = useRouter()
 
   return useMutation({
     mutationFn: (input: CheckoutInput) =>
@@ -80,7 +79,7 @@ export function useCheckout(locale: string) {
       qc.setQueryData(queryKeys.orders.detail(order.order_number), order)
       // Invalidate order list so it refreshes
       qc.invalidateQueries({ queryKey: queryKeys.orders.all })
-      router.push(`/${locale}/account/orders/${order.order_number}`)
+      // Navigation handled by checkout page after charge creation
     },
   })
 }

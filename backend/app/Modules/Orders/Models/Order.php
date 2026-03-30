@@ -6,6 +6,7 @@ namespace App\Modules\Orders\Models;
 
 use App\Models\User;
 use App\Modules\Customers\Models\CustomerAddress;
+use App\Modules\Payments\Models\TapTransaction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -70,6 +71,11 @@ class Order extends Model
     public function billingAddress(): BelongsTo
     {
         return $this->belongsTo(CustomerAddress::class, 'billing_address_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(TapTransaction::class)->orderByDesc('attempt_number');
     }
 
     public function isCancellable(): bool

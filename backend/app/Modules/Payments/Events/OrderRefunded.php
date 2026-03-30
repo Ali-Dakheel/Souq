@@ -9,10 +9,8 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * Fired by the Payments module after a refund is processed.
+ * Fired by the Payments module after a refund is processed via Tap API.
  * Listened to by: Orders (update status), Inventory (return stock).
- *
- * NOTE: This is a stub — implementation lives in the Payments module (Phase 2.5).
  */
 class OrderRefunded
 {

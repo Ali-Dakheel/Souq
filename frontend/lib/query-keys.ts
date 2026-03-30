@@ -18,4 +18,9 @@ export const queryKeys = {
   addresses: {
     all: ["addresses"] as const,
   },
+  payments: {
+    all: ["payments"] as const,
+    result: (tapId: string) => ["payments", "result", tapId] as const,
+    order: (orderId: number) => ["payments", "order", orderId] as const,
+  },
 } as const

@@ -138,6 +138,9 @@ bahrain-ecomm/
 | `OrderFulfilled` | Orders | Notifications (shipping update) |
 | `StockLow` | Inventory | Notifications (admin alert) |
 | `OrderRefunded` | Payments | Orders (update status), Inventory (return stock) |
+| `RefundRequested` | Payments | Notifications (admin alert) |
+| `RefundApproved` | Payments | Notifications (customer email) |
+| `RefundRejected` | Payments | Notifications (customer email) |
 | `CartItemAdded` | Cart | Cart (log) |
 | `CartItemRemoved` | Cart | Cart (log) |
 | `CartMerged` | Cart | Cart (log + Phase 3 WebSocket stub) |
@@ -197,9 +200,9 @@ bahrain-ecomm/
 - [x] Customers module — auth (register/login/logout/password reset), profiles, addresses (30/30 tests)
 - [x] Cart module — guest (X-Cart-Session header, 30-day TTL) + authenticated (DB), merge on login/register, full coupon system, VAT 10%, abandonment tracking, prune job
 - [x] Orders module — checkout, order lifecycle, status history (42/42 tests) + full frontend (checkout page, orders list, order detail, cancel dialog, address selector, status timeline)
-- [ ] Payments module — Tap Payments redirect flow, webhooks, refunds
-- [ ] Filament admin panel
-- [ ] Notifications module — emails via Resend (order confirm, receipt, shipping)
+- [x] Payments module — Tap Payments redirect flow (src_all), webhooks (HMAC-SHA256 with amount+currency+status), refunds (customer request + admin approve), ShouldBeUnique job dedup, ownership guards on result endpoint, 28/28 tests + frontend (checkout→Tap redirect, /checkout/result with polling, /orders/[id]/refund, retry payment on failure)
+- [ ] Filament admin panel — OrderResource, CustomerResource, ProductResource, PaymentResource (view charge), RefundResource (approve/reject actions), CouponResource
+- [ ] Notifications module — emails via Resend (order confirm, receipt, shipping update)
 
 **PHASE 3 — Hardening** (locked until Phase 2 complete)
 Blue-green deploy, k6 load tests, security audit, Lighthouse CI, full RTL audit
@@ -299,3 +302,35 @@ After `$order->update(['order_status' => 'cancelled'])`, calling `$order->getOri
 
 **Zod v4 `z.record()` requires two arguments: `z.record(keySchema, valueSchema)`**
 `z.record(z.string())` (one arg) was valid in Zod v3 but errors in v4 with "Expected 2-3 arguments, but got 1". Use `z.record(z.string(), z.string())` for string-valued records. This affects variant_attributes and similar JSONB fields.
+
+### Payments Module — 2026-03-31
+
+**`TapApiService` config values can be `null` in testing — always cast to `(string)`**
+`config('services.tap.secret_key')` returns `null` when the env var is unset. Since the property is typed `string`, this causes a `TypeError`. Cast with `(string)` or provide a fallback: `(string) config('services.tap.secret_key', '')`.
+
+**PostgreSQL CHECK constraint ALTER syntax doesn't work on SQLite**
+The migration for altering the `refunds.status` enum uses `ALTER TABLE ... DROP CONSTRAINT`. SQLite (used in testing) has no CHECK constraint support. Gate the raw SQL with `if (DB::getDriverName() === 'pgsql')`.
+
+**Eloquent auto-manages `created_at` — explicit values in `create()` are overwritten unless in `$fillable`**
+When testing stale records, use `Carbon::setTestNow(now()->subMinutes(35))` before `Model::create()`, then `Carbon::setTestNow()` to reset. Don't pass `created_at` directly.
+
+**`useCheckout` hook must not navigate — checkout now has two steps**
+Checkout flow changed from: create order → navigate to order detail, to: create order → create charge → `window.location.href` redirect to Tap. The `useCheckout` hook returns the order; the calling component chains the charge creation in `onSuccess`.
+
+**Existing table names: `tap_transactions` (not `payments`) and `refunds` — use model `$table` if needed**
+Phase 1 created `tap_transactions` (not `payments`). The model is named `TapTransaction` and the table stays as-is. Multiple payment attempts per order are tracked via `attempt_number` column (unique constraint on `order_id` was dropped).
+
+**`.env.testing` had old Tap key names (`TAP_SECRET_KEY`) — must match config keys (`TAP_SECRET_KEY_TEST`)**
+Config reads `TAP_SECRET_KEY_TEST`/`TAP_SECRET_KEY_LIVE` and switches based on `APP_ENV`. Ensure `.env.testing` uses `TAP_SECRET_KEY_TEST=...` not `TAP_SECRET_KEY=...`.
+
+**Tap webhook hashstring covers id + amount + currency + status — NOT charge ID alone**
+Tap HMAC-SHA256 hashstring is computed over `"x_id{id}x_amount{amount}x_currency{currency}x_status{status}"`. Amount is normalized to 3 decimal places. Hashing only the charge ID allows signature forgery. Always verify with the full field set and use `hash_equals()` for timing safety.
+
+**Webhook secret bypass must be production-gated**
+`empty($webhookSecret)` returning `true` to skip verification is only safe in non-production. In production, an unconfigured webhook secret must reject all webhooks (return false/401). Gate with `app()->isProduction()`.
+
+**`ShouldBeUnique` on queue jobs prevents Tap webhook retry duplicates**
+Tap retries webhooks up to twice. Without `ShouldBeUnique` + `uniqueId()`, both the original and the retry can land in the queue simultaneously. Even with idempotent handling, two concurrent jobs waste resources and risk lock contention. Add to any webhook-processing job.
+
+**Payment result endpoint must be authenticated + ownership-checked**
+`GET /payments/result?tap_id=chg_xxx` was public, allowing anyone to query another customer's payment status by charge ID. The charge was always created by an authenticated user, so the result endpoint should also require `auth:sanctum` and validate `$transaction->order->user_id === $request->user()->id`.

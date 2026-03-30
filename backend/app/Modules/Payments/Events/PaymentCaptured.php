@@ -11,8 +11,6 @@ use Illuminate\Queue\SerializesModels;
 /**
  * Fired by the Payments module after Tap Payments confirms a successful charge.
  * Listened to by: Orders (mark paid), Cart (clear cart, record coupon usage).
- *
- * NOTE: This is a stub — implementation lives in the Payments module (Phase 2.5).
  */
 class PaymentCaptured
 {
