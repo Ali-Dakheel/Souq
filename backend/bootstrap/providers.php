@@ -8,9 +8,13 @@ use App\Modules\Notifications\NotificationsServiceProvider;
 use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Payments\PaymentsServiceProvider;
 use App\Providers\AppServiceProvider;
+use App\Providers\Filament\AdminPanelProvider;
+use Filament\FilamentServiceProvider;
 
 return [
     AppServiceProvider::class,
+    FilamentServiceProvider::class,
+    AdminPanelProvider::class,
     CartServiceProvider::class,
     CatalogServiceProvider::class,
     CustomersServiceProvider::class,
