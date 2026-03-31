@@ -36,7 +36,7 @@ class AttributeResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components([
+        return $schema->schema([
             TextInput::make('name.ar')
                 ->label('Name (Arabic)')
                 ->required()
