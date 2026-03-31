@@ -16,8 +16,10 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 use UnitEnum;
 
 class AttributeResource extends Resource
@@ -34,7 +36,7 @@ class AttributeResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->schema([
+        return $schema->components([
             TextInput::make('name.ar')
                 ->label('Name (Arabic)')
                 ->required()
@@ -42,13 +44,32 @@ class AttributeResource extends Resource
             TextInput::make('name.en')
                 ->label('Name (English)')
                 ->required()
-                ->maxLength(255),
+                ->maxLength(255)
+                ->live(onBlur: true)
+                ->afterStateUpdated(function ($state, callable $set): void {
+                    $set('slug', Str::slug($state));
+                }),
+            TextInput::make('slug')
+                ->label('Slug')
+                ->required()
+                ->unique(ignoreRecord: true),
             Select::make('attribute_type')
-                ->label('Type')
+                ->label('Attribute Type')
                 ->options([
-                    'select' => 'Select',
-                    'text' => 'Text',
                     'color' => 'Color',
+                    'size' => 'Size',
+                    'material' => 'Material',
+                    'brand' => 'Brand',
+                    'custom' => 'Custom',
+                ])
+                ->required(),
+            Select::make('input_type')
+                ->label('Input Type')
+                ->options([
+                    'dropdown' => 'Dropdown',
+                    'color_picker' => 'Color Picker',
+                    'text' => 'Text',
+                    'radio' => 'Radio',
                 ])
                 ->required(),
             TextInput::make('sort_order')
@@ -57,7 +78,7 @@ class AttributeResource extends Resource
                 ->default(0),
             Toggle::make('is_filterable')
                 ->label('Filterable')
-                ->default(false),
+                ->default(true),
         ]);
     }
 
@@ -75,8 +96,14 @@ class AttributeResource extends Resource
                     })
                     ->searchable(),
                 TextColumn::make('attribute_type')
-                    ->label('Type')
+                    ->label('Attribute Type')
                     ->badge(),
+                TextColumn::make('input_type')
+                    ->label('Input Type')
+                    ->badge(),
+                IconColumn::make('is_filterable')
+                    ->label('Filterable')
+                    ->boolean(),
                 TextColumn::make('sort_order')->sortable(),
             ])
             ->defaultSort('sort_order')
