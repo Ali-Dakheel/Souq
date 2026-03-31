@@ -32,6 +32,9 @@ class Order extends Model
         'delivery_zone_id',
         'delivery_method_id',
         'notes',
+        'locale',
+        'tracking_number',
+        'fulfilled_at',
         'paid_at',
         'cancelled_at',
     ];
@@ -39,13 +42,14 @@ class Order extends Model
     protected $casts = [
         'shipping_address_snapshot' => 'array',
         'billing_address_snapshot' => 'array',
-        'subtotal_fils'             => 'integer',
-        'coupon_discount_fils'      => 'integer',
-        'vat_fils'                  => 'integer',
-        'delivery_fee_fils'         => 'integer',
-        'total_fils'                => 'integer',
-        'paid_at'                   => 'datetime',
-        'cancelled_at'              => 'datetime',
+        'subtotal_fils' => 'integer',
+        'coupon_discount_fils' => 'integer',
+        'vat_fils' => 'integer',
+        'delivery_fee_fils' => 'integer',
+        'total_fils' => 'integer',
+        'paid_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'fulfilled_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
