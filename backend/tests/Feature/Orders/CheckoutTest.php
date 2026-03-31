@@ -7,7 +7,6 @@ namespace Tests\Feature\Orders;
 use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
-use App\Modules\Cart\Models\Coupon;
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\InventoryItem;
 use App\Modules\Catalog\Models\Product;
@@ -32,28 +31,28 @@ class CheckoutTest extends TestCase
     {
         $category = Category::create([
             'name' => ['ar' => 'قسم', 'en' => 'Category'],
-            'slug' => 'cat-' . uniqid(),
+            'slug' => 'cat-'.uniqid(),
         ]);
 
         $product = Product::create([
-            'name'           => ['ar' => 'منتج', 'en' => 'Product'],
-            'slug'           => 'prod-' . uniqid(),
-            'category_id'    => $category->id,
+            'name' => ['ar' => 'منتج', 'en' => 'Product'],
+            'slug' => 'prod-'.uniqid(),
+            'category_id' => $category->id,
             'base_price_fils' => $priceFils,
-            'is_available'   => true,
+            'is_available' => true,
         ]);
 
         $variant = Variant::create([
-            'product_id'   => $product->id,
-            'sku'          => 'SKU-' . uniqid(),
-            'attributes'   => [],
+            'product_id' => $product->id,
+            'sku' => 'SKU-'.uniqid(),
+            'attributes' => [],
             'is_available' => true,
         ]);
 
         InventoryItem::create([
-            'variant_id'        => $variant->id,
+            'variant_id' => $variant->id,
             'quantity_available' => $stock,
-            'quantity_reserved'  => 0,
+            'quantity_reserved' => 0,
         ]);
 
         return $variant->load(['product', 'inventory']);
@@ -62,29 +61,29 @@ class CheckoutTest extends TestCase
     private function makeAddress(User $user): CustomerAddress
     {
         return CustomerAddress::create([
-            'user_id'        => $user->id,
-            'address_type'   => 'shipping',
+            'user_id' => $user->id,
+            'address_type' => 'shipping',
             'recipient_name' => 'Ali Test',
-            'phone'          => '+97366000000',
-            'governorate'    => 'Capital',
-            'district'       => 'Manama',
+            'phone' => '+97366000000',
+            'governorate' => 'Capital',
+            'district' => 'Manama',
             'street_address' => '123 Test St',
-            'is_default'     => true,
-            'is_active'      => true,
+            'is_default' => true,
+            'is_active' => true,
         ]);
     }
 
     private function makeCartWithItem(User $user, Variant $variant, int $qty = 1): Cart
     {
         $cart = Cart::create([
-            'user_id'    => $user->id,
+            'user_id' => $user->id,
             'expires_at' => now()->addDays(30),
         ]);
 
         CartItem::create([
-            'cart_id'             => $cart->id,
-            'variant_id'          => $variant->id,
-            'quantity'            => $qty,
+            'cart_id' => $cart->id,
+            'variant_id' => $variant->id,
+            'quantity' => $qty,
             'price_fils_snapshot' => $variant->product->base_price_fils,
         ]);
 
@@ -95,8 +94,8 @@ class CheckoutTest extends TestCase
     {
         return array_merge([
             'shipping_address_id' => $addr->id,
-            'billing_address_id'  => $addr->id,
-            'payment_method'      => 'benefit',
+            'billing_address_id' => $addr->id,
+            'payment_method' => 'benefit',
         ], $overrides);
     }
 
@@ -108,9 +107,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock(10000, 5);
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant, 2);
 
         $response = $this->actingAs($user, 'sanctum')
@@ -136,7 +135,7 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $variant   = $this->makeVariantWithStock(5000, 10);
+        $variant = $this->makeVariantWithStock(5000, 10);
         $sessionId = 'guest-session-checkout-001';
 
         $cart = Cart::create([
@@ -144,9 +143,9 @@ class CheckoutTest extends TestCase
             'expires_at' => now()->addDays(30),
         ]);
         CartItem::create([
-            'cart_id'             => $cart->id,
-            'variant_id'          => $variant->id,
-            'quantity'            => 1,
+            'cart_id' => $cart->id,
+            'variant_id' => $variant->id,
+            'quantity' => 1,
             'price_fils_snapshot' => 5000,
         ]);
 
@@ -178,7 +177,7 @@ class CheckoutTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/checkout', [
                 'shipping_address_id' => $addr->id,
-                'billing_address_id'  => $addr->id,
+                'billing_address_id' => $addr->id,
             ]);
 
         $response->assertStatus(422)
@@ -207,7 +206,7 @@ class CheckoutTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/v1/checkout', [
                 'billing_address_id' => $addr->id,
-                'payment_method'     => 'card',
+                'payment_method' => 'card',
             ]);
 
         $response->assertStatus(422)
@@ -242,9 +241,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock(5000, 1); // only 1 available
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant, 2); // requesting 2
 
         $response = $this->actingAs($user, 'sanctum')
@@ -262,9 +261,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock();
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant);
 
         $response = $this->actingAs($user, 'sanctum')
@@ -284,9 +283,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock();
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant);
 
         $this->actingAs($user, 'sanctum')
@@ -307,9 +306,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock(8000);
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant, 3);
 
         $this->actingAs($user, 'sanctum')
@@ -331,35 +330,35 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user     = User::factory()->create();
+        $user = User::factory()->create();
         $category = Category::create([
             'name' => ['ar' => 'إلكترونيات', 'en' => 'Electronics'],
-            'slug' => 'cat-' . uniqid(),
+            'slug' => 'cat-'.uniqid(),
         ]);
         $product = Product::create([
-            'name'           => ['ar' => 'هاتف', 'en' => 'Phone'],
-            'slug'           => 'prod-' . uniqid(),
-            'category_id'    => $category->id,
+            'name' => ['ar' => 'هاتف', 'en' => 'Phone'],
+            'slug' => 'prod-'.uniqid(),
+            'category_id' => $category->id,
             'base_price_fils' => 50000,
-            'is_available'   => true,
+            'is_available' => true,
         ]);
         $variant = Variant::create([
-            'product_id'   => $product->id,
-            'sku'          => 'SKU-' . uniqid(),
-            'attributes'   => [],
+            'product_id' => $product->id,
+            'sku' => 'SKU-'.uniqid(),
+            'attributes' => [],
             'is_available' => true,
         ]);
         InventoryItem::create([
-            'variant_id'        => $variant->id,
+            'variant_id' => $variant->id,
             'quantity_available' => 5,
-            'quantity_reserved'  => 0,
+            'quantity_reserved' => 0,
         ]);
 
         $cart = Cart::create(['user_id' => $user->id, 'expires_at' => now()->addDays(30)]);
         CartItem::create([
-            'cart_id'             => $cart->id,
-            'variant_id'          => $variant->id,
-            'quantity'            => 1,
+            'cart_id' => $cart->id,
+            'variant_id' => $variant->id,
+            'quantity' => 1,
             'price_fils_snapshot' => 50000,
         ]);
 
@@ -370,7 +369,7 @@ class CheckoutTest extends TestCase
             ->assertStatus(201);
 
         $orderId = $response->json('data.id');
-        $item    = OrderItem::where('order_id', $orderId)->first();
+        $item = OrderItem::where('order_id', $orderId)->first();
 
         $this->assertNotNull($item);
         $this->assertEquals('هاتف', $item->product_name['ar']);
@@ -385,9 +384,9 @@ class CheckoutTest extends TestCase
     {
         Event::fake([OrderPlaced::class]);
 
-        $user    = User::factory()->create();
+        $user = User::factory()->create();
         $variant = $this->makeVariantWithStock();
-        $addr    = $this->makeAddress($user);
+        $addr = $this->makeAddress($user);
         $this->makeCartWithItem($user, $variant);
 
         $response = $this->actingAs($user, 'sanctum')
@@ -395,7 +394,7 @@ class CheckoutTest extends TestCase
             ->assertStatus(201);
 
         $orderId = $response->json('data.id');
-        $order   = Order::find($orderId);
+        $order = Order::find($orderId);
 
         $this->assertNotNull($order->shipping_address_snapshot);
         $this->assertEquals('Ali Test', $order->shipping_address_snapshot['recipient_name']);

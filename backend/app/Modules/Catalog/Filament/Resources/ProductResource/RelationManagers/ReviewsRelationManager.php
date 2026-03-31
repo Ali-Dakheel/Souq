@@ -23,7 +23,9 @@ class ReviewsRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('user.name')->label('Reviewer'),
+                TextColumn::make('user.name')
+                    ->label('Reviewer')
+                    ->fallback('Deleted user'),
                 TextColumn::make('rating'),
                 TextColumn::make('body')->limit(80),
                 TextColumn::make('is_approved')->badge()

@@ -29,9 +29,9 @@ class TapTransaction extends Model
     ];
 
     protected $casts = [
-        'amount_fils'         => 'integer',
-        'attempt_number'      => 'integer',
-        'tap_response'        => 'array',
+        'amount_fils' => 'integer',
+        'attempt_number' => 'integer',
+        'tap_response' => 'array',
         'webhook_received_at' => 'datetime',
     ];
 

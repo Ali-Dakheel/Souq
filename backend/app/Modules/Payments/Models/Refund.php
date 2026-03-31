@@ -29,8 +29,8 @@ class Refund extends Model
 
     protected $casts = [
         'refund_amount_fils' => 'integer',
-        'tap_response'       => 'array',
-        'processed_at'       => 'datetime',
+        'tap_response' => 'array',
+        'processed_at' => 'datetime',
     ];
 
     public function order(): BelongsTo

@@ -19,13 +19,13 @@ class PaymentChargeTest extends TestCase
     private function makeOrder(User $user, string $status = 'pending'): Order
     {
         return Order::create([
-            'order_number'    => 'ORD-2026-' . str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
-            'user_id'         => $user->id,
-            'order_status'    => $status,
-            'subtotal_fils'   => 10000,
-            'vat_fils'        => 1000,
-            'total_fils'      => 11000,
-            'payment_method'  => 'card',
+            'order_number' => 'ORD-2026-'.str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
+            'user_id' => $user->id,
+            'order_status' => $status,
+            'subtotal_fils' => 10000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
+            'payment_method' => 'card',
         ]);
     }
 
@@ -39,10 +39,10 @@ class PaymentChargeTest extends TestCase
     private function tapChargeResponse(string $chargeId = 'chg_test_123'): array
     {
         return [
-            'id'     => $chargeId,
+            'id' => $chargeId,
             'status' => 'INITIATED',
             'transaction' => [
-                'url' => 'https://tap.company/pay/' . $chargeId,
+                'url' => 'https://tap.company/pay/'.$chargeId,
             ],
         ];
     }
@@ -66,9 +66,9 @@ class PaymentChargeTest extends TestCase
         $response->assertJsonPath('redirect_url', 'https://tap.company/pay/chg_test_123');
 
         $this->assertDatabaseHas('tap_transactions', [
-            'order_id'      => $order->id,
+            'order_id' => $order->id,
             'tap_charge_id' => 'chg_test_123',
-            'status'        => 'initiated',
+            'status' => 'initiated',
             'attempt_number' => 1,
         ]);
     }
@@ -117,10 +117,10 @@ class PaymentChargeTest extends TestCase
 
         // Existing failed transaction
         TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_old',
-            'amount_fils'    => 11000,
-            'status'         => 'failed',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_old',
+            'amount_fils' => 11000,
+            'status' => 'failed',
             'attempt_number' => 1,
         ]);
 

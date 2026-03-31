@@ -42,7 +42,8 @@ class VariantsRelationManager extends RelationManager
                     ->label('Price (BHD)')
                     ->formatStateUsing(fn (?int $state): string => $state ? number_format($state / 1000, 3).' BHD' : 'Inherited'),
                 TextColumn::make('inventory.quantity_available')
-                    ->label('Stock'),
+                    ->label('Stock')
+                    ->fallback('—'),
             ])
             ->headerActions([CreateAction::make()])
             ->actions([EditAction::make(), DeleteAction::make()]);

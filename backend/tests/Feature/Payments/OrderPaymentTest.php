@@ -18,28 +18,28 @@ class OrderPaymentTest extends TestCase
     {
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $user->id,
-            'order_status'  => 'paid',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $user->id,
+            'order_status' => 'paid',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
         TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_attempt_1',
-            'amount_fils'    => 11000,
-            'status'         => 'failed',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_attempt_1',
+            'amount_fils' => 11000,
+            'status' => 'failed',
             'attempt_number' => 1,
         ]);
 
         TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_attempt_2',
-            'amount_fils'    => 11000,
-            'status'         => 'captured',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_attempt_2',
+            'amount_fils' => 11000,
+            'status' => 'captured',
             'attempt_number' => 2,
         ]);
 
@@ -55,12 +55,12 @@ class OrderPaymentTest extends TestCase
         $owner = User::factory()->create();
         $intruder = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $owner->id,
-            'order_status'  => 'paid',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $owner->id,
+            'order_status' => 'paid',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
@@ -73,12 +73,12 @@ class OrderPaymentTest extends TestCase
     {
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $user->id,
-            'order_status'  => 'pending',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $user->id,
+            'order_status' => 'pending',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 

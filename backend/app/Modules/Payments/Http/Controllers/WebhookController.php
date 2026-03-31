@@ -25,6 +25,7 @@ class WebhookController extends Controller
         // Step 1: Verify webhook signature
         if (! $this->verifySignature($request)) {
             Log::warning('Tap webhook signature verification failed');
+
             return response()->json(['error' => 'Invalid signature'], 401);
         }
 
@@ -33,9 +34,10 @@ class WebhookController extends Controller
 
         if (! $chargeId) {
             Log::warning('Tap webhook missing charge ID', [
-                'status'   => $request->input('status'),
+                'status' => $request->input('status'),
                 'currency' => $request->input('currency'),
             ]);
+
             return response()->json(['error' => 'Missing charge ID'], 400);
         }
 
@@ -65,10 +67,12 @@ class WebhookController extends Controller
             // In production, reject unsigned webhooks — secret MUST be configured.
             if (app()->isProduction()) {
                 Log::error('Tap webhook secret not configured in production — rejecting webhook');
+
                 return false;
             }
 
             Log::warning('Tap webhook secret not configured — skipping verification (non-production)');
+
             return true;
         }
 
@@ -79,11 +83,11 @@ class WebhookController extends Controller
         }
 
         $chargeId = $request->input('id', '');
-        $amount   = number_format((float) $request->input('amount', 0), 3, '.', '');
+        $amount = number_format((float) $request->input('amount', 0), 3, '.', '');
         $currency = $request->input('currency', 'BHD');
-        $status   = $request->input('status', '');
+        $status = $request->input('status', '');
 
-        $payload  = "x_id{$chargeId}x_amount{$amount}x_currency{$currency}x_status{$status}";
+        $payload = "x_id{$chargeId}x_amount{$amount}x_currency{$currency}x_status{$status}";
         $computed = hash_hmac('sha256', $payload, $webhookSecret);
 
         return hash_equals($computed, $hashstring);

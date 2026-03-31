@@ -5,14 +5,15 @@ declare(strict_types=1);
 namespace App\Modules\Cart\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Cart\Requests\AddToCartRequest;
 use App\Modules\Cart\Requests\ApplyCouponRequest;
 use App\Modules\Cart\Requests\MergeCartRequest;
 use App\Modules\Cart\Requests\UpdateCartItemRequest;
-use App\Modules\Cart\Resources\CartResource;
 use App\Modules\Cart\Resources\CartItemResource;
+use App\Modules\Cart\Resources\CartResource;
 use App\Modules\Cart\Services\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -127,7 +128,7 @@ class CartController extends Controller
 
     public function merge(MergeCartRequest $request): JsonResponse
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
         $userCart = $this->cartService->getOrCreateCart($user->id, null);
 

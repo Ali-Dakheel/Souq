@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Resources;
 
-use App\Modules\Cart\Services\CartService;
+use App\Modules\Cart\Models\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,7 +20,7 @@ class CartResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var \App\Modules\Cart\Models\Cart $this */
+        /** @var Cart $this */
         $coupon = $this->coupon_code ? $this->coupon()->first() : null;
 
         return [

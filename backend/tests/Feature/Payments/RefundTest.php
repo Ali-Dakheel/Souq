@@ -20,21 +20,21 @@ class RefundTest extends TestCase
     private function makePaidOrder(User $user): array
     {
         $order = Order::create([
-            'order_number'  => 'ORD-2026-' . str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
-            'user_id'       => $user->id,
-            'order_status'  => 'paid',
+            'order_number' => 'ORD-2026-'.str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
+            'user_id' => $user->id,
+            'order_status' => 'paid',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
-            'paid_at'       => now(),
+            'paid_at' => now(),
         ]);
 
         $transaction = TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_' . uniqid(),
-            'amount_fils'    => 11000,
-            'status'         => 'captured',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_'.uniqid(),
+            'amount_fils' => 11000,
+            'status' => 'captured',
             'attempt_number' => 1,
         ]);
 
@@ -50,7 +50,7 @@ class RefundTest extends TestCase
 
         $response = $this->actingAs($user)->postJson("/api/v1/payments/{$tx->id}/refund", [
             'reason' => 'customer_request',
-            'notes'  => 'Changed my mind',
+            'notes' => 'Changed my mind',
         ]);
 
         $response->assertStatus(201);
@@ -58,10 +58,10 @@ class RefundTest extends TestCase
         $response->assertJsonPath('data.refund_amount_fils', 11000);
 
         $this->assertDatabaseHas('refunds', [
-            'order_id'             => $order->id,
-            'tap_transaction_id'   => $tx->id,
-            'status'               => 'pending',
-            'refund_reason'        => 'customer_request',
+            'order_id' => $order->id,
+            'tap_transaction_id' => $tx->id,
+            'status' => 'pending',
+            'refund_reason' => 'customer_request',
             'requested_by_user_id' => $user->id,
         ]);
 
@@ -97,20 +97,20 @@ class RefundTest extends TestCase
     {
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $user->id,
-            'order_status'  => 'initiated',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $user->id,
+            'order_status' => 'initiated',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
         $tx = TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_initiated',
-            'amount_fils'    => 11000,
-            'status'         => 'initiated',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_initiated',
+            'amount_fils' => 11000,
+            'status' => 'initiated',
             'attempt_number' => 1,
         ]);
 
@@ -128,11 +128,11 @@ class RefundTest extends TestCase
 
         // Existing pending refund
         Refund::create([
-            'order_id'             => $order->id,
-            'tap_transaction_id'   => $tx->id,
-            'refund_amount_fils'   => 11000,
-            'refund_reason'        => 'customer_request',
-            'status'               => 'pending',
+            'order_id' => $order->id,
+            'tap_transaction_id' => $tx->id,
+            'refund_amount_fils' => 11000,
+            'refund_reason' => 'customer_request',
+            'status' => 'pending',
             'requested_by_user_id' => $user->id,
         ]);
 

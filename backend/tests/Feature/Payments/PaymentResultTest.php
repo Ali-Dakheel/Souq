@@ -25,20 +25,20 @@ class PaymentResultTest extends TestCase
         string $txStatus = 'initiated',
     ): array {
         $order = Order::create([
-            'order_number'  => 'ORD-2026-' . str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
-            'user_id'       => $user->id,
-            'order_status'  => $orderStatus,
+            'order_number' => 'ORD-2026-'.str_pad((string) rand(1, 99999), 5, '0', STR_PAD_LEFT),
+            'user_id' => $user->id,
+            'order_status' => $orderStatus,
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
         $transaction = TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => $tapChargeId,
-            'amount_fils'    => 11000,
-            'status'         => $txStatus,
+            'order_id' => $order->id,
+            'tap_charge_id' => $tapChargeId,
+            'amount_fils' => 11000,
+            'status' => $txStatus,
             'attempt_number' => 1,
         ]);
 
@@ -54,8 +54,8 @@ class PaymentResultTest extends TestCase
 
         $mock = $this->mock(TapApiService::class);
         $mock->shouldReceive('retrieveCharge')->once()->andReturn([
-            'id'       => 'chg_test_123',
-            'status'   => 'CAPTURED',
+            'id' => 'chg_test_123',
+            'status' => 'CAPTURED',
             'response' => ['code' => '000', 'message' => 'Captured'],
         ]);
 
@@ -66,7 +66,7 @@ class PaymentResultTest extends TestCase
 
         $this->assertDatabaseHas('tap_transactions', [
             'tap_charge_id' => 'chg_test_123',
-            'status'        => 'captured',
+            'status' => 'captured',
         ]);
 
         Event::assertDispatched(PaymentCaptured::class);
@@ -81,8 +81,8 @@ class PaymentResultTest extends TestCase
 
         $mock = $this->mock(TapApiService::class);
         $mock->shouldReceive('retrieveCharge')->once()->andReturn([
-            'id'       => 'chg_test_123',
-            'status'   => 'FAILED',
+            'id' => 'chg_test_123',
+            'status' => 'FAILED',
             'response' => ['code' => '100', 'message' => 'Card declined'],
         ]);
 
@@ -116,7 +116,7 @@ class PaymentResultTest extends TestCase
 
         $mock = $this->mock(TapApiService::class);
         $mock->shouldReceive('retrieveCharge')->once()->andReturn([
-            'id'     => 'chg_test_123',
+            'id' => 'chg_test_123',
             'status' => 'CAPTURED',
         ]);
 

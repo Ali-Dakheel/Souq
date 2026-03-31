@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Cart;
 
-use App\Models\User;
 use App\Modules\Cart\Events\CartAbandoned;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartItem;
@@ -24,12 +23,12 @@ class CartPruneJobTest extends TestCase
     {
         $category = Category::create([
             'name' => ['ar' => 'قسم', 'en' => 'Cat'],
-            'slug' => 'cat-prune-' . uniqid(),
+            'slug' => 'cat-prune-'.uniqid(),
         ]);
 
         $product = Product::create([
             'name' => ['ar' => 'منتج', 'en' => 'Prod'],
-            'slug' => 'prod-prune-' . uniqid(),
+            'slug' => 'prod-prune-'.uniqid(),
             'category_id' => $category->id,
             'base_price_fils' => 3000,
             'is_available' => true,
@@ -37,7 +36,7 @@ class CartPruneJobTest extends TestCase
 
         $variant = Variant::create([
             'product_id' => $product->id,
-            'sku' => 'SKU-PRUNE-' . uniqid(),
+            'sku' => 'SKU-PRUNE-'.uniqid(),
             'is_available' => true,
         ]);
 

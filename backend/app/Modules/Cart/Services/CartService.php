@@ -14,7 +14,9 @@ use App\Modules\Cart\Events\CouponRemoved;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartAbandonment;
 use App\Modules\Cart\Models\CartItem;
+use App\Modules\Cart\Models\Coupon;
 use App\Modules\Catalog\Models\Variant;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -127,7 +129,7 @@ class CartService
     /**
      * Apply a coupon code to the cart.
      *
-     * @return array{coupon: \App\Modules\Cart\Models\Coupon, discount_fils: int}
+     * @return array{coupon: Coupon, discount_fils: int}
      *
      * @throws ValidationException
      */
@@ -186,6 +188,7 @@ class CartService
 
                 if ($cap <= 0) {
                     $stats['items_removed_due_to_limits']++;
+
                     continue;
                 }
 
@@ -270,7 +273,7 @@ class CartService
     /**
      * Return cart items whose current price differs from the stored snapshot.
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, CartItem>
+     * @return Collection<int, CartItem>
      */
     public function getItemsWithPriceChanges(Cart $cart)
     {
@@ -297,6 +300,7 @@ class CartService
         foreach ($cart->items as $item) {
             if ($item->variant_id === null || $item->variant === null) {
                 $errors[] = 'One or more items are no longer available.';
+
                 continue;
             }
 

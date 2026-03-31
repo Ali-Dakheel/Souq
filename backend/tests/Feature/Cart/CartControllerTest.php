@@ -32,12 +32,12 @@ class CartControllerTest extends TestCase
     {
         $category = Category::create([
             'name' => ['ar' => 'قسم', 'en' => 'Category'],
-            'slug' => 'cat-' . uniqid(),
+            'slug' => 'cat-'.uniqid(),
         ]);
 
         $product = Product::create([
             'name' => ['ar' => 'منتج', 'en' => 'Product'],
-            'slug' => 'prod-' . uniqid(),
+            'slug' => 'prod-'.uniqid(),
             'category_id' => $category->id,
             'base_price_fils' => $priceFils,
             'is_available' => true,
@@ -45,7 +45,7 @@ class CartControllerTest extends TestCase
 
         $variant = Variant::create([
             'product_id' => $product->id,
-            'sku' => 'SKU-' . uniqid(),
+            'sku' => 'SKU-'.uniqid(),
             'is_available' => true,
         ]);
 

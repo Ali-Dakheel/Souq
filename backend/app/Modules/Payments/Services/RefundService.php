@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Services;
 
 use App\Models\User;
-use App\Modules\Orders\Models\Order;
 use App\Modules\Payments\Events\OrderRefunded;
 use App\Modules\Payments\Events\RefundApproved;
 use App\Modules\Payments\Events\RefundRejected;
@@ -66,12 +65,12 @@ class RefundService
         }
 
         $refund = Refund::create([
-            'order_id'             => $order->id,
-            'tap_transaction_id'   => $transaction->id,
-            'refund_amount_fils'   => $refundFils,
-            'refund_reason'        => $reason,
-            'customer_notes'       => $customerNotes,
-            'status'               => 'pending',
+            'order_id' => $order->id,
+            'tap_transaction_id' => $transaction->id,
+            'refund_amount_fils' => $refundFils,
+            'refund_reason' => $reason,
+            'customer_notes' => $customerNotes,
+            'status' => 'pending',
             'requested_by_user_id' => $customer->id,
         ]);
 
@@ -95,8 +94,8 @@ class RefundService
         }
 
         $refund->update([
-            'status'               => 'processing',
-            'admin_notes'          => $adminNotes,
+            'status' => 'processing',
+            'admin_notes' => $adminNotes,
             'processed_by_user_id' => $admin->id,
         ]);
 
@@ -106,24 +105,24 @@ class RefundService
         // Map internal reason to Tap API reason values
         $tapReason = match ($refund->refund_reason) {
             'duplicate_charge' => 'duplicate',
-            'payment_error'    => 'fraudulent',
-            default            => 'requested_by_customer',
+            'payment_error' => 'fraudulent',
+            default => 'requested_by_customer',
         };
 
         try {
             $tapResponse = $this->tapApi->createRefund([
                 'charge_id' => $transaction->tap_charge_id,
-                'amount'    => $amountDecimal,
-                'currency'  => 'BHD',
-                'reason'    => $tapReason,
-                'metadata'  => [
+                'amount' => $amountDecimal,
+                'currency' => 'BHD',
+                'reason' => $tapReason,
+                'metadata' => [
                     'refund_id' => (string) $refund->id,
-                    'order_id'  => (string) $refund->order_id,
+                    'order_id' => (string) $refund->order_id,
                 ],
             ]);
 
             $refund->update([
-                'status'       => 'completed',
+                'status' => 'completed',
                 'tap_refund_id' => $tapResponse['id'],
                 'tap_response' => $tapResponse,
                 'processed_at' => now(),
@@ -136,8 +135,8 @@ class RefundService
             return $refund;
         } catch (TapApiException $e) {
             $refund->update([
-                'status'       => 'failed',
-                'refund_notes' => 'Tap API error: ' . $e->getMessage(),
+                'status' => 'failed',
+                'refund_notes' => 'Tap API error: '.$e->getMessage(),
                 'processed_at' => now(),
             ]);
 
@@ -157,10 +156,10 @@ class RefundService
         }
 
         $refund->update([
-            'status'               => 'rejected',
-            'admin_notes'          => $adminNotes,
+            'status' => 'rejected',
+            'admin_notes' => $adminNotes,
             'processed_by_user_id' => $admin->id,
-            'processed_at'         => now(),
+            'processed_at' => now(),
         ]);
 
         RefundRejected::dispatch($refund);

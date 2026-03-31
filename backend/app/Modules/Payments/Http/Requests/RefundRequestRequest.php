@@ -17,7 +17,7 @@ class RefundRequestRequest extends FormRequest
     {
         return [
             'reason' => ['required', 'string', 'in:customer_request,duplicate_charge,other'],
-            'notes'  => ['nullable', 'string', 'max:1000'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

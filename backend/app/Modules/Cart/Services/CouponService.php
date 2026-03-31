@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Cart\Services;
 
 use App\Modules\Cart\Models\Coupon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
 class CouponService
@@ -113,7 +114,7 @@ class CouponService
     /**
      * Return active coupons visible to customers (for listing).
      *
-     * @return \Illuminate\Database\Eloquent\Collection<int, Coupon>
+     * @return Collection<int, Coupon>
      */
     public function getActiveCoupons(?int $categoryId = null, ?int $productId = null)
     {

@@ -49,8 +49,8 @@ class CartServiceProvider extends ServiceProvider
         Event::listen(CartAbandoned::class, [$logger, 'handleCartAbandoned']);
         Event::listen(CartMerged::class, [UpdateCartOnMerge::class, 'handle']);
 
-        Event::listen(OrderPlaced::class,    [RecordCouponUsageOnOrderPlaced::class, 'handle']);
-        Event::listen(PaymentFailed::class,  [ReleaseCouponUsageOnPaymentFailed::class, 'handle']);
+        Event::listen(OrderPlaced::class, [RecordCouponUsageOnOrderPlaced::class, 'handle']);
+        Event::listen(PaymentFailed::class, [ReleaseCouponUsageOnPaymentFailed::class, 'handle']);
         Event::listen(PaymentCaptured::class, [ClearCartOnPaymentCaptured::class, 'handle']);
 
         if ($this->app->runningInConsole()) {

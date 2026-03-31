@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Payments\Exceptions\TapApiException;
 use App\Modules\Payments\Http\Requests\CreateChargeRequest;
@@ -13,7 +14,7 @@ use App\Modules\Payments\Http\Resources\TapTransactionResource;
 use App\Modules\Payments\Models\TapTransaction;
 use App\Modules\Payments\Services\PaymentService;
 use App\Modules\Payments\Services\RefundService;
-use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -50,12 +51,12 @@ class PaymentController extends Controller
             $transaction = $this->paymentService->initiatePayment($order, $user);
         } catch (TapApiException $e) {
             throw ValidationException::withMessages([
-                'payment' => ['Payment service error: ' . $e->getMessage()],
+                'payment' => ['Payment service error: '.$e->getMessage()],
             ]);
         }
 
         return response()->json([
-            'data'         => new TapTransactionResource($transaction),
+            'data' => new TapTransactionResource($transaction),
             'redirect_url' => $transaction->redirect_url,
         ], 201);
     }
@@ -77,7 +78,7 @@ class PaymentController extends Controller
 
         try {
             $transaction = $this->paymentService->handleChargeResult($tapChargeId);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        } catch (ModelNotFoundException $e) {
             throw ValidationException::withMessages([
                 'tap_id' => ['Payment not found.'],
             ]);

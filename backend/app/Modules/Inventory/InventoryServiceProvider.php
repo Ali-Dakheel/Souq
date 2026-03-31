@@ -21,8 +21,8 @@ class InventoryServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__.'/routes.php');
 
-        Event::listen(OrderPlaced::class,    [ReserveInventoryOnOrderPlaced::class, 'handle']);
+        Event::listen(OrderPlaced::class, [ReserveInventoryOnOrderPlaced::class, 'handle']);
         Event::listen(OrderCancelled::class, [ReleaseInventoryOnOrderCancelled::class, 'handle']);
-        Event::listen(PaymentFailed::class,  [ReleaseInventoryOnPaymentFailed::class, 'handle']);
+        Event::listen(PaymentFailed::class, [ReleaseInventoryOnPaymentFailed::class, 'handle']);
     }
 }

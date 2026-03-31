@@ -17,8 +17,7 @@ class OrderPlaced
     use Dispatchable, SerializesModels;
 
     /**
-     * @param Order $order
-     * @param array<int, array{variant_id: int, quantity: int}> $items
+     * @param  array<int, array{variant_id: int, quantity: int}>  $items
      */
     public function __construct(
         public readonly Order $order,

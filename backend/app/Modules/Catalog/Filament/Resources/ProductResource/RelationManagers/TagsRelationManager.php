@@ -29,7 +29,8 @@ class TagsRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('name'),
+                TextColumn::make('name')
+                    ->formatStateUsing(fn ($state) => is_array($state) ? ($state['en'] ?? $state['ar'] ?? '') : (string) $state),
             ])
             ->headerActions([AttachAction::make()->preloadRecordSelect()])
             ->actions([DetachAction::make()]);

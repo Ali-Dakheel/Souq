@@ -26,7 +26,7 @@ class OrdersServiceProvider extends ServiceProvider
         $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         Event::listen(PaymentCaptured::class, [MarkOrderPaidOnPaymentCaptured::class, 'handle']);
-        Event::listen(PaymentFailed::class,   [MarkOrderFailedOnPaymentFailed::class, 'handle']);
-        Event::listen(OrderRefunded::class,   [MarkOrderRefundedOnOrderRefunded::class, 'handle']);
+        Event::listen(PaymentFailed::class, [MarkOrderFailedOnPaymentFailed::class, 'handle']);
+        Event::listen(OrderRefunded::class, [MarkOrderRefundedOnOrderRefunded::class, 'handle']);
     }
 }

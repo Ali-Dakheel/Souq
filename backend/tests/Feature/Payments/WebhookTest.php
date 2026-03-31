@@ -22,25 +22,25 @@ class WebhookTest extends TestCase
 
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $user->id,
-            'order_status'  => 'initiated',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $user->id,
+            'order_status' => 'initiated',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
         TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_webhook_test',
-            'amount_fils'    => 11000,
-            'status'         => 'initiated',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_webhook_test',
+            'amount_fils' => 11000,
+            'status' => 'initiated',
             'attempt_number' => 1,
         ]);
 
         $response = $this->postJson('/api/v1/webhooks/tap', [
-            'id'     => 'chg_webhook_test',
+            'id' => 'chg_webhook_test',
             'status' => 'CAPTURED',
         ]);
 
@@ -67,7 +67,7 @@ class WebhookTest extends TestCase
         config(['services.tap.webhook_secret' => 'test_secret_key']);
 
         $response = $this->postJson('/api/v1/webhooks/tap', [
-            'id'     => 'chg_test',
+            'id' => 'chg_test',
             'status' => 'CAPTURED',
         ], [
             'hashstring' => 'invalid_hash',

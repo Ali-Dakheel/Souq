@@ -7,9 +7,9 @@ namespace Tests\Feature\Payments;
 use App\Models\User;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Payments\Events\PaymentCaptured;
-use App\Modules\Payments\Events\PaymentFailed;
 use App\Modules\Payments\Jobs\CheckStalePaymentsJob;
 use App\Modules\Payments\Models\TapTransaction;
+use App\Modules\Payments\Services\PaymentService;
 use App\Modules\Payments\Services\TapApiService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -26,12 +26,12 @@ class StalePaymentJobTest extends TestCase
 
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00001',
-            'user_id'       => $user->id,
-            'order_status'  => 'initiated',
+            'order_number' => 'ORD-2026-00001',
+            'user_id' => $user->id,
+            'order_status' => 'initiated',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
@@ -39,10 +39,10 @@ class StalePaymentJobTest extends TestCase
         Carbon::setTestNow(now()->subMinutes(35));
 
         $tx = TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_stale',
-            'amount_fils'    => 11000,
-            'status'         => 'initiated',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_stale',
+            'amount_fils' => 11000,
+            'status' => 'initiated',
             'attempt_number' => 1,
         ]);
 
@@ -53,17 +53,17 @@ class StalePaymentJobTest extends TestCase
             ->with('chg_stale')
             ->once()
             ->andReturn([
-                'id'       => 'chg_stale',
-                'status'   => 'CAPTURED',
+                'id' => 'chg_stale',
+                'status' => 'CAPTURED',
                 'response' => ['code' => '000', 'message' => 'Captured'],
             ]);
 
-        $job = new CheckStalePaymentsJob();
-        $job->handle(app(\App\Modules\Payments\Services\PaymentService::class));
+        $job = new CheckStalePaymentsJob;
+        $job->handle(app(PaymentService::class));
 
         $this->assertDatabaseHas('tap_transactions', [
             'tap_charge_id' => 'chg_stale',
-            'status'        => 'captured',
+            'status' => 'captured',
         ]);
 
         Event::assertDispatched(PaymentCaptured::class);
@@ -73,20 +73,20 @@ class StalePaymentJobTest extends TestCase
     {
         $user = User::factory()->create();
         $order = Order::create([
-            'order_number'  => 'ORD-2026-00002',
-            'user_id'       => $user->id,
-            'order_status'  => 'initiated',
+            'order_number' => 'ORD-2026-00002',
+            'user_id' => $user->id,
+            'order_status' => 'initiated',
             'subtotal_fils' => 10000,
-            'vat_fils'      => 1000,
-            'total_fils'    => 11000,
+            'vat_fils' => 1000,
+            'total_fils' => 11000,
             'payment_method' => 'card',
         ]);
 
         TapTransaction::create([
-            'order_id'       => $order->id,
-            'tap_charge_id'  => 'chg_fresh',
-            'amount_fils'    => 11000,
-            'status'         => 'initiated',
+            'order_id' => $order->id,
+            'tap_charge_id' => 'chg_fresh',
+            'amount_fils' => 11000,
+            'status' => 'initiated',
             'attempt_number' => 1,
             // created_at defaults to now() — NOT stale
         ]);
@@ -94,12 +94,12 @@ class StalePaymentJobTest extends TestCase
         $mock = $this->mock(TapApiService::class);
         $mock->shouldNotReceive('retrieveCharge');
 
-        $job = new CheckStalePaymentsJob();
-        $job->handle(app(\App\Modules\Payments\Services\PaymentService::class));
+        $job = new CheckStalePaymentsJob;
+        $job->handle(app(PaymentService::class));
 
         $this->assertDatabaseHas('tap_transactions', [
             'tap_charge_id' => 'chg_fresh',
-            'status'        => 'initiated', // unchanged
+            'status' => 'initiated', // unchanged
         ]);
     }
 }

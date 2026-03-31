@@ -20,15 +20,15 @@ class OrderListTest extends TestCase
     private function makeOrder(User $user, string $status = 'pending', array $overrides = []): Order
     {
         return Order::create(array_merge([
-            'order_number'         => 'ORD-2026-' . str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
-            'user_id'              => $user->id,
-            'order_status'         => $status,
-            'subtotal_fils'        => 10000,
+            'order_number' => 'ORD-2026-'.str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
+            'user_id' => $user->id,
+            'order_status' => $status,
+            'subtotal_fils' => 10000,
             'coupon_discount_fils' => 0,
-            'vat_fils'             => 1000,
-            'delivery_fee_fils'    => 0,
-            'total_fils'           => 11000,
-            'payment_method'       => 'benefit',
+            'vat_fils' => 1000,
+            'delivery_fee_fils' => 0,
+            'total_fils' => 11000,
+            'payment_method' => 'benefit',
         ], $overrides));
     }
 
@@ -102,9 +102,9 @@ class OrderListTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $first  = $this->makeOrder($user);
+        $first = $this->makeOrder($user);
         $second = $this->makeOrder($user);
-        $third  = $this->makeOrder($user);
+        $third = $this->makeOrder($user);
 
         // Touch timestamps to ensure order
         $first->update(['created_at' => now()->subMinutes(10)]);

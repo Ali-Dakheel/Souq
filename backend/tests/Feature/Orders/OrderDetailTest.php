@@ -24,16 +24,16 @@ class OrderDetailTest extends TestCase
         ?string $guestEmail = null,
     ): Order {
         return Order::create([
-            'order_number'         => 'ORD-2026-' . str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
-            'user_id'              => $user?->id,
-            'guest_email'          => $guestEmail,
-            'order_status'         => $status,
-            'subtotal_fils'        => 10000,
+            'order_number' => 'ORD-2026-'.str_pad((string) random_int(1, 99999), 5, '0', STR_PAD_LEFT),
+            'user_id' => $user?->id,
+            'guest_email' => $guestEmail,
+            'order_status' => $status,
+            'subtotal_fils' => 10000,
             'coupon_discount_fils' => 0,
-            'vat_fils'             => 1000,
-            'delivery_fee_fils'    => 0,
-            'total_fils'           => 11000,
-            'payment_method'       => 'card',
+            'vat_fils' => 1000,
+            'delivery_fee_fils' => 0,
+            'total_fils' => 11000,
+            'payment_method' => 'card',
         ]);
     }
 
@@ -43,7 +43,7 @@ class OrderDetailTest extends TestCase
 
     public function test_owner_can_view_their_order(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $order = $this->makeOrder($user);
 
         $response = $this->actingAs($user, 'sanctum')
@@ -91,15 +91,15 @@ class OrderDetailTest extends TestCase
 
     public function test_response_includes_status_history(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $order = $this->makeOrder($user);
 
         OrderStatusHistory::create([
-            'order_id'   => $order->id,
+            'order_id' => $order->id,
             'old_status' => 'pending',
             'new_status' => 'pending',
             'changed_by' => 'system',
-            'reason'     => 'Order placed.',
+            'reason' => 'Order placed.',
             'created_at' => now(),
         ]);
 
@@ -139,7 +139,7 @@ class OrderDetailTest extends TestCase
 
     public function test_guest_endpoint_rejects_orders_with_no_guest_email(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $order = $this->makeOrder($user, 'pending', null);
 
         $response = $this->getJson(
@@ -155,7 +155,7 @@ class OrderDetailTest extends TestCase
 
     public function test_unauthenticated_cannot_view_order(): void
     {
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
         $order = $this->makeOrder($user);
 
         $this->getJson("/api/v1/orders/{$order->order_number}")->assertStatus(401);

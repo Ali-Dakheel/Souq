@@ -6,6 +6,4 @@ namespace App\Modules\Payments\Exceptions;
 
 use RuntimeException;
 
-class TapApiException extends RuntimeException
-{
-}
+class TapApiException extends RuntimeException {}

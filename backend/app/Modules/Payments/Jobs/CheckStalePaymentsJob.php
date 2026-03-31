@@ -34,7 +34,7 @@ class CheckStalePaymentsJob implements ShouldQueue
             } catch (\Throwable $e) {
                 Log::warning('Failed to resolve stale payment', [
                     'tap_charge_id' => $transaction->tap_charge_id,
-                    'error'         => $e->getMessage(),
+                    'error' => $e->getMessage(),
                 ]);
                 // Continue to next — retry on next scheduled run
             }

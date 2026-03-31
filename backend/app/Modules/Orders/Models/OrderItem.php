@@ -26,11 +26,11 @@ class OrderItem extends Model
     ];
 
     protected $casts = [
-        'product_name'       => 'array',
+        'product_name' => 'array',
         'variant_attributes' => 'array',
-        'quantity'           => 'integer',
+        'quantity' => 'integer',
         'price_fils_per_unit' => 'integer',
-        'total_fils'         => 'integer',
+        'total_fils' => 'integer',
     ];
 
     public function order(): BelongsTo

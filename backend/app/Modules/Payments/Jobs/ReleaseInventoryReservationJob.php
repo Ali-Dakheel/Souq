@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Jobs;
 
-use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderService;
 use Illuminate\Bus\Queueable;
@@ -41,8 +40,9 @@ class ReleaseInventoryReservationJob implements ShouldQueue
         if ($order->order_status !== 'failed') {
             Log::info('Skipping inventory release — order is no longer failed', [
                 'order_id' => $this->orderId,
-                'status'   => $order->order_status,
+                'status' => $order->order_status,
             ]);
+
             return;
         }
 
@@ -54,7 +54,7 @@ class ReleaseInventoryReservationJob implements ShouldQueue
             // Order is not cancellable — already handled
             Log::info('Order not cancellable during inventory release', [
                 'order_id' => $this->orderId,
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
         }
     }

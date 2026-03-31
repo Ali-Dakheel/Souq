@@ -34,11 +34,11 @@ class RecordCouponUsageOnOrderPlaced
         }
 
         CouponUsage::create([
-            'coupon_id'            => $coupon->id,
-            'order_id'             => $order->id,
-            'user_id'              => $order->user_id,
+            'coupon_id' => $coupon->id,
+            'order_id' => $order->id,
+            'user_id' => $order->user_id,
             'discount_amount_fils' => $order->coupon_discount_fils,
-            'used_at'              => now(),
+            'used_at' => now(),
         ]);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Resources;
 
+use App\Modules\Cart\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ class CartItemResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var \App\Modules\Cart\Models\CartItem $this */
+        /** @var CartItem $this */
         $variant = $this->variant;
 
         return [

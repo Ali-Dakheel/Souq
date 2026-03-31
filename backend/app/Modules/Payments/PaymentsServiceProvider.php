@@ -28,7 +28,7 @@ class PaymentsServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             /** @var Schedule $schedule */
             $schedule = $this->app->make(Schedule::class);
-            $schedule->job(new CheckStalePaymentsJob())->everyFifteenMinutes();
+            $schedule->job(new CheckStalePaymentsJob)->everyFifteenMinutes();
         });
     }
 }

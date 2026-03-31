@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Resources;
 
+use App\Modules\Cart\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ class PublicCouponResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var \App\Modules\Cart\Models\Coupon $this */
+        /** @var Coupon $this */
         return [
             'code' => $this->code,
             'name' => $this->name,

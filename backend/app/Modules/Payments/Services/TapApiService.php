@@ -18,11 +18,12 @@ use Illuminate\Support\Facades\Log;
 class TapApiService
 {
     private string $baseUrl;
+
     private string $secretKey;
 
     public function __construct()
     {
-        $this->baseUrl   = (string) config('services.tap.base_url', 'https://api.tap.company/v2');
+        $this->baseUrl = (string) config('services.tap.base_url', 'https://api.tap.company/v2');
         $this->secretKey = (string) config('services.tap.secret_key', '');
     }
 
@@ -75,7 +76,7 @@ class TapApiService
             $response = Http::withToken($this->secretKey)
                 ->timeout(15)
                 ->retry(1, 500)
-                ->post($this->baseUrl . $path, $payload);
+                ->post($this->baseUrl.$path, $payload);
         } catch (ConnectionException $e) {
             Log::error('Tap API connection error', ['path' => $path, 'error' => $e->getMessage()]);
             throw new TapApiException('Payment service is temporarily unavailable.', 503, $e);
@@ -87,10 +88,10 @@ class TapApiService
             $errorCode = $body['errors'][0]['code'] ?? 'unknown';
 
             Log::warning('Tap API error', [
-                'path'       => $path,
-                'status'     => $response->status(),
+                'path' => $path,
+                'status' => $response->status(),
                 'error_code' => $errorCode,
-                'error_msg'  => $errorMsg,
+                'error_msg' => $errorMsg,
             ]);
 
             throw new TapApiException($errorMsg, $response->status());
@@ -108,7 +109,7 @@ class TapApiService
             $response = Http::withToken($this->secretKey)
                 ->timeout(15)
                 ->retry(1, 500)
-                ->get($this->baseUrl . $path);
+                ->get($this->baseUrl.$path);
         } catch (ConnectionException $e) {
             Log::error('Tap API connection error', ['path' => $path, 'error' => $e->getMessage()]);
             throw new TapApiException('Payment service is temporarily unavailable.', 503, $e);

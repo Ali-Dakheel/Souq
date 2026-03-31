@@ -26,7 +26,7 @@ class MarkOrderPaidOnPaymentCaptured
 
         $order->update([
             'order_status' => 'paid',
-            'paid_at'      => now(),
+            'paid_at' => now(),
         ]);
 
         $this->orderService->recordStatusChange($order, 'paid', 'system', 'Payment captured.', $oldStatus);
