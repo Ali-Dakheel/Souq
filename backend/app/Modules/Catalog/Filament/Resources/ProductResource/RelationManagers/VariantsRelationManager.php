@@ -28,9 +28,6 @@ class VariantsRelationManager extends RelationManager
                 ->label('Price (fils, leave blank to inherit product price)')
                 ->numeric()
                 ->nullable(),
-            TextInput::make('stock')
-                ->numeric()
-                ->default(0),
             KeyValue::make('attributes')
                 ->label('Attributes (key: value pairs)'),
         ]);
