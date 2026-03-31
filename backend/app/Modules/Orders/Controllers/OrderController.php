@@ -36,13 +36,14 @@ class OrderController extends Controller
         );
 
         $order = $this->orderService->checkout(
-            cart:              $cart,
-            userId:            Auth::id(),
-            guestEmail:        $request->string('guest_email')->toString() ?: null,
+            cart: $cart,
+            userId: Auth::id(),
+            guestEmail: $request->string('guest_email')->toString() ?: null,
             shippingAddressId: $request->integer('shipping_address_id'),
-            billingAddressId:  $request->integer('billing_address_id'),
-            paymentMethod:     $request->string('payment_method')->toString(),
-            notes:             $request->string('notes')->toString() ?: null,
+            billingAddressId: $request->integer('billing_address_id'),
+            paymentMethod: $request->string('payment_method')->toString(),
+            notes: $request->string('notes')->toString() ?: null,
+            locale: $request->string('locale', 'ar')->toString(),
         );
 
         return (new OrderResource($order))
@@ -57,19 +58,19 @@ class OrderController extends Controller
     public function index(Request $request): JsonResponse
     {
         $paginator = $this->orderService->getUserOrders(
-            userId:   Auth::id(),
-            page:     (int) $request->query('page', 1),
-            perPage:  (int) $request->query('per_page', 15),
-            status:   $request->query('status'),
+            userId: Auth::id(),
+            page: (int) $request->query('page', 1),
+            perPage: (int) $request->query('per_page', 15),
+            status: $request->query('status'),
         );
 
         return response()->json([
             'data' => OrderListResource::collection($paginator->items()),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
             ],
         ]);
     }
@@ -119,9 +120,9 @@ class OrderController extends Controller
 
         try {
             $order = $this->orderService->cancelOrder(
-                order:      $order,
-                reason:     $request->string('reason')->toString() ?: null,
-                changedBy:  'customer',
+                order: $order,
+                reason: $request->string('reason')->toString() ?: null,
+                changedBy: 'customer',
             );
         } catch (\InvalidArgumentException $e) {
             throw ValidationException::withMessages(['order' => [$e->getMessage()]]);

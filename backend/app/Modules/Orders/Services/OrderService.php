@@ -9,10 +9,12 @@ use App\Modules\Cart\Services\CartService;
 use App\Modules\Catalog\Models\InventoryItem;
 use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Orders\Events\OrderCancelled;
+use App\Modules\Orders\Events\OrderFulfilled;
 use App\Modules\Orders\Events\OrderPlaced;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderItem;
 use App\Modules\Orders\Models\OrderStatusHistory;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -51,6 +53,7 @@ class OrderService
         int $billingAddressId,
         string $paymentMethod,
         ?string $notes = null,
+        string $locale = 'ar',
     ): Order {
         $cart->loadMissing('items.variant.product.category', 'items.variant.inventory');
 
@@ -61,12 +64,12 @@ class OrderService
         }
 
         $shippingAddress = CustomerAddress::findOrFail($shippingAddressId);
-        $billingAddress  = CustomerAddress::findOrFail($billingAddressId);
+        $billingAddress = CustomerAddress::findOrFail($billingAddressId);
 
         $totals = $this->cartService->calculateTotals($cart);
 
         return DB::transaction(function () use (
-            $cart, $userId, $guestEmail, $paymentMethod, $notes,
+            $cart, $userId, $guestEmail, $paymentMethod, $notes, $locale,
             $shippingAddress, $billingAddress, $totals,
         ) {
             // --- Re-check stock inside transaction with row-level locks ---
@@ -92,22 +95,23 @@ class OrderService
 
             // --- Create order ---
             $order = Order::create([
-                'order_number'              => 'TMP-' . Str::uuid(),
-                'user_id'                   => $userId,
-                'guest_email'               => $guestEmail,
-                'order_status'              => 'pending',
-                'subtotal_fils'             => $totals['subtotal_fils'],
-                'coupon_discount_fils'      => $totals['discount_fils'],
-                'coupon_code'               => $cart->coupon_code,
-                'vat_fils'                  => $totals['vat_fils'],
-                'delivery_fee_fils'         => 0,
-                'total_fils'                => $totals['total_fils'],
-                'payment_method'            => $paymentMethod,
-                'shipping_address_id'       => $shippingAddress->id,
+                'order_number' => 'TMP-'.Str::uuid(),
+                'user_id' => $userId,
+                'guest_email' => $guestEmail,
+                'order_status' => 'pending',
+                'subtotal_fils' => $totals['subtotal_fils'],
+                'coupon_discount_fils' => $totals['discount_fils'],
+                'coupon_code' => $cart->coupon_code,
+                'vat_fils' => $totals['vat_fils'],
+                'delivery_fee_fils' => 0,
+                'total_fils' => $totals['total_fils'],
+                'payment_method' => $paymentMethod,
+                'shipping_address_id' => $shippingAddress->id,
                 'shipping_address_snapshot' => $this->snapshotAddress($shippingAddress),
-                'billing_address_id'        => $billingAddress->id,
-                'billing_address_snapshot'  => $this->snapshotAddress($billingAddress),
-                'notes'                     => $notes,
+                'billing_address_id' => $billingAddress->id,
+                'billing_address_snapshot' => $this->snapshotAddress($billingAddress),
+                'notes' => $notes,
+                'locale' => $locale,
             ]);
 
             // Assign sequential order number using the auto-increment id
@@ -121,20 +125,20 @@ class OrderService
                 $product = $variant->product;
 
                 OrderItem::create([
-                    'order_id'           => $order->id,
-                    'product_id'         => $product->id,
-                    'variant_id'         => $variant->id,
-                    'sku'                => $variant->sku,
-                    'product_name'       => $product->name,
+                    'order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'variant_id' => $variant->id,
+                    'sku' => $variant->sku,
+                    'product_name' => $product->name,
                     'variant_attributes' => $variant->attributes,
-                    'quantity'           => $item->quantity,
+                    'quantity' => $item->quantity,
                     'price_fils_per_unit' => $item->price_fils_snapshot,
-                    'total_fils'         => $item->line_total_fils,
+                    'total_fils' => $item->line_total_fils,
                 ]);
 
                 $eventItems[] = [
                     'variant_id' => $variant->id,
-                    'quantity'   => $item->quantity,
+                    'quantity' => $item->quantity,
                 ];
             }
 
@@ -187,6 +191,67 @@ class OrderService
     }
 
     /**
+     * Mark an order as fulfilled with a tracking number and fire OrderFulfilled event.
+     */
+    public function fulfillOrder(Order $order, ?string $trackingNumber): void
+    {
+        $oldStatus = $order->order_status;
+
+        $order->update([
+            'order_status' => 'fulfilled',
+            'tracking_number' => $trackingNumber,
+            'fulfilled_at' => Carbon::now(),
+        ]);
+
+        $this->recordStatusChange($order, 'fulfilled', 'admin', 'Fulfilled by admin', $oldStatus);
+
+        OrderFulfilled::dispatch($order);
+    }
+
+    /**
+     * Override an order's status with an optional note for audit trail.
+     */
+    public function overrideOrderStatus(Order $order, string $newStatus, string $note): void
+    {
+        $oldStatus = $order->order_status;
+
+        $order->update(['order_status' => $newStatus]);
+
+        $this->recordStatusChange($order, $newStatus, 'admin', $note, $oldStatus);
+    }
+
+    /**
+     * Cancel an order as an admin user. Only certain statuses may be cancelled.
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function cancelOrderAsAdmin(Order $order, string $reason = 'Cancelled by admin'): void
+    {
+        if (! in_array($order->order_status, ['pending', 'initiated', 'processing', 'paid'], true)) {
+            throw new \InvalidArgumentException("Order cannot be cancelled in status: {$order->order_status}");
+        }
+
+        $order->loadMissing('items');
+
+        $oldStatus = $order->order_status;
+
+        $order->update([
+            'order_status' => 'cancelled',
+            'cancelled_at' => Carbon::now(),
+        ]);
+
+        $this->recordStatusChange($order, 'cancelled', 'admin', $reason, $oldStatus);
+
+        $eventItems = $order->items
+            ->filter(fn ($i) => $i->variant_id !== null)
+            ->map(fn ($i) => ['variant_id' => $i->variant_id, 'quantity' => $i->quantity])
+            ->values()
+            ->toArray();
+
+        OrderCancelled::dispatch($order, $eventItems, $reason);
+    }
+
+    /**
      * Append an entry to the immutable order_status_history log.
      */
     public function recordStatusChange(
@@ -197,11 +262,11 @@ class OrderService
         ?string $oldStatus = null,
     ): void {
         OrderStatusHistory::create([
-            'order_id'   => $order->id,
+            'order_id' => $order->id,
             'old_status' => $oldStatus ?? $order->getOriginal('order_status') ?? $order->order_status,
             'new_status' => $newStatus,
             'changed_by' => $changedBy,
-            'reason'     => $reason,
+            'reason' => $reason,
             'created_at' => now(),
         ]);
     }
@@ -250,14 +315,14 @@ class OrderService
     private function snapshotAddress(CustomerAddress $address): array
     {
         return [
-            'recipient_name'       => $address->recipient_name,
-            'phone'                => $address->phone,
-            'governorate'          => $address->governorate,
-            'district'             => $address->district,
-            'street_address'       => $address->street_address,
-            'building_number'      => $address->building_number,
-            'apartment_number'     => $address->apartment_number,
-            'postal_code'          => $address->postal_code,
+            'recipient_name' => $address->recipient_name,
+            'phone' => $address->phone,
+            'governorate' => $address->governorate,
+            'district' => $address->district,
+            'street_address' => $address->street_address,
+            'building_number' => $address->building_number,
+            'apartment_number' => $address->apartment_number,
+            'postal_code' => $address->postal_code,
             'delivery_instructions' => $address->delivery_instructions,
         ];
     }

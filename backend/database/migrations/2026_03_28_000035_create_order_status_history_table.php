@@ -11,8 +11,8 @@ return new class extends Migration
         Schema::create('order_status_history', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_id');
-            $table->enum('old_status', ['pending', 'initiated', 'paid', 'failed', 'refunded', 'cancelled'])->nullable();
-            $table->enum('new_status', ['pending', 'initiated', 'paid', 'failed', 'refunded', 'cancelled']);
+            $table->enum('old_status', ['pending', 'initiated', 'processing', 'paid', 'fulfilled', 'failed', 'refunded', 'cancelled'])->nullable();
+            $table->enum('new_status', ['pending', 'initiated', 'processing', 'paid', 'fulfilled', 'failed', 'refunded', 'cancelled']);
             $table->string('changed_by')->nullable(); // "system", "admin", user email, etc.
             $table->text('reason')->nullable();
             $table->timestamp('created_at')->useCurrent();

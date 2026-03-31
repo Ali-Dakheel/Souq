@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('order_number', 50)->unique(); // "ORD-2026-00001"
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('guest_email')->nullable();
-            $table->enum('order_status', ['pending', 'initiated', 'paid', 'failed', 'refunded', 'cancelled'])->default('pending');
+            $table->enum('order_status', ['pending', 'initiated', 'processing', 'paid', 'fulfilled', 'failed', 'refunded', 'cancelled'])->default('pending');
             $table->integer('subtotal_fils');                       // sum of items × qty, before discounts/tax
             $table->integer('coupon_discount_fils')->default(0);    // discount amount, always positive
             $table->integer('vat_fils');                            // 10% VAT for Bahrain
