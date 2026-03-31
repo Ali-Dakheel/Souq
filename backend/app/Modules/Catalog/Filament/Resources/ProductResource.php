@@ -32,6 +32,8 @@ class ProductResource extends Resource
 
     protected static ?string $navigationLabel = 'Products';
 
+    protected static ?string $navigationGroup = 'Catalog';
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
@@ -64,7 +66,7 @@ class ProductResource extends Resource
                             ->get()
                             ->mapWithKeys(
                                 fn (Category $category) => [
-                                    $category->id => $this->formatCategoryName($category),
+                                    $category->id => self::formatCategoryName($category),
                                 ]
                             )
                             ->toArray()
