@@ -11,8 +11,8 @@ use App\Modules\Catalog\Filament\Resources\CategoryResource\RelationManagers\Chi
 use App\Modules\Catalog\Models\Category;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -30,9 +30,9 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([
+        return $schema->components([
             TextInput::make('name.ar')->label('Name (Arabic)')->required(),
             TextInput::make('name.en')->label('Name (English)')->required()
                 ->live(onBlur: true)
