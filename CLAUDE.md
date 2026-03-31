@@ -201,7 +201,8 @@ bahrain-ecomm/
 - [x] Cart module — guest (X-Cart-Session header, 30-day TTL) + authenticated (DB), merge on login/register, full coupon system, VAT 10%, abandonment tracking, prune job
 - [x] Orders module — checkout, order lifecycle, status history (42/42 tests) + full frontend (checkout page, orders list, order detail, cancel dialog, address selector, status timeline)
 - [x] Payments module — Tap Payments redirect flow (src_all), webhooks (HMAC-SHA256 with amount+currency+status), refunds (customer request + admin approve), ShouldBeUnique job dedup, ownership guards on result endpoint, 28/28 tests + frontend (checkout→Tap redirect, /checkout/result with polling, /orders/[id]/refund, retry payment on failure)
-- [ ] Filament admin panel — OrderResource, CustomerResource, ProductResource, PaymentResource (view charge), RefundResource (approve/reject actions), CouponResource
+- [x] Filament admin panel (partial) — Filament v5 installed, RBAC (super_admin role), AdminPanelProvider with multi-module discovery, OrderResource (list/view/fulfill/cancel/override + relation managers), ProductResource (full CRUD + variants/tags/reviews), CategoryResource (bilingual CRUD + sub-categories), AttributeResource (bilingual CRUD + attribute values)
+- [ ] Filament admin panel (remaining) — TapTransactionResource (read-only), RefundResource (approve/reject), CustomerResource (read-only + orders), CouponResource, feature tests, AdminSeeder run
 - [ ] Notifications module — emails via Resend (order confirm, receipt, shipping update)
 
 **PHASE 3 — Hardening** (locked until Phase 2 complete)
@@ -334,3 +335,20 @@ Tap retries webhooks up to twice. Without `ShouldBeUnique` + `uniqueId()`, both 
 
 **Payment result endpoint must be authenticated + ownership-checked**
 `GET /payments/result?tap_id=chg_xxx` was public, allowing anyone to query another customer's payment status by charge ID. The charge was always created by an authenticated user, so the result endpoint should also require `auth:sanctum` and validate `$transaction->order->user_id === $request->user()->id`.
+
+### Filament Admin Panel — 2026-03-31
+
+**Filament v5 is installed (NOT v3) — plan says v3 but actual installed version is v5.4.3**
+`composer.json` has `"filament/filament": "^5.4"`. All plan spec code using `Form $form: Form` from `Filament\Forms\Form` is wrong. Always use the v5 Schema API.
+
+**Filament v5 Schema API: ALL form methods use `Schema $schema: Schema`**
+Both main resource `form()` methods AND RelationManager `form()` methods must use `Filament\Schemas\Schema`. Signature: `public static function form(Schema $schema): Schema { return $schema->schema([...]); }`. Using `->components([...])` instead of `->schema([...])` silently produces an empty form. The codebase standard (confirmed from ProductResource.php) is `$schema->schema([...])`.
+
+**`BadgeColumn` does not exist in Filament v5 — use `TextColumn::make()->badge()`**
+Plan spec uses `BadgeColumn::make('status')->colors([...])` which is a v3 API. In v5 use `TextColumn::make('status')->badge()->color(fn ($state) => match($state) { ... })`. Always check existing resources (ProductResource, AttributeResource) for the correct v5 table column API before writing new resources.
+
+**Always read actual DB migrations before implementing Filament forms — plan enum values often differ**
+The `attributes` table migration has `attribute_type` enum `['color','size','material','brand','custom']` and `input_type` enum `['dropdown','color_picker','text','radio']`. The plan spec had wrong values (`['select','text','color']`). Always read the migration file first; wrong enum values cause silent save failures (validation passes, DB rejects).
+
+**Filament v5 `discoverResources()` path must match actual directory structure**
+`AdminPanelProvider` calls `discoverResources(in: app_path('Modules/Catalog/Filament/Resources'), for: 'App\\Modules\\Catalog\\Filament\\Resources')` for each module. Resources auto-discovered from these paths — no manual registration needed per resource.
