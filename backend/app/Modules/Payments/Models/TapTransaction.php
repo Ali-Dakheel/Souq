@@ -5,12 +5,21 @@ declare(strict_types=1);
 namespace App\Modules\Payments\Models;
 
 use App\Modules\Orders\Models\Order;
+use Database\Factories\TapTransactionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TapTransaction extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): TapTransactionFactory
+    {
+        return TapTransactionFactory::new();
+    }
+
     protected $table = 'tap_transactions';
 
     protected $fillable = [

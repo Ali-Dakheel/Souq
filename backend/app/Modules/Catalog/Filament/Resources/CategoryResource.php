@@ -9,6 +9,7 @@ use App\Modules\Catalog\Filament\Resources\CategoryResource\Pages\EditCategory;
 use App\Modules\Catalog\Filament\Resources\CategoryResource\Pages\ListCategories;
 use App\Modules\Catalog\Filament\Resources\CategoryResource\RelationManagers\ChildCategoriesRelationManager;
 use App\Modules\Catalog\Models\Category;
+use BackedEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -17,16 +18,17 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
+use UnitEnum;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
     protected static ?string $navigationLabel = 'Categories';
 
-    protected static ?string $navigationGroup = 'Catalog';
+    protected static UnitEnum|string|null $navigationGroup = 'Catalog';
 
     protected static ?int $navigationSort = 2;
 

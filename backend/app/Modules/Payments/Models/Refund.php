@@ -6,11 +6,20 @@ namespace App\Modules\Payments\Models;
 
 use App\Models\User;
 use App\Modules\Orders\Models\Order;
+use Database\Factories\RefundFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Refund extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): RefundFactory
+    {
+        return RefundFactory::new();
+    }
+
     protected $fillable = [
         'order_id',
         'tap_transaction_id',

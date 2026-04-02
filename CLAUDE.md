@@ -201,9 +201,8 @@ bahrain-ecomm/
 - [x] Cart module — guest (X-Cart-Session header, 30-day TTL) + authenticated (DB), merge on login/register, full coupon system, VAT 10%, abandonment tracking, prune job
 - [x] Orders module — checkout, order lifecycle, status history (42/42 tests) + full frontend (checkout page, orders list, order detail, cancel dialog, address selector, status timeline)
 - [x] Payments module — Tap Payments redirect flow (src_all), webhooks (HMAC-SHA256 with amount+currency+status), refunds (customer request + admin approve), ShouldBeUnique job dedup, ownership guards on result endpoint, 28/28 tests + frontend (checkout→Tap redirect, /checkout/result with polling, /orders/[id]/refund, retry payment on failure)
-- [x] Filament admin panel (partial) — Filament v5 installed, RBAC (super_admin role), AdminPanelProvider with multi-module discovery, OrderResource (list/view/fulfill/cancel/override + relation managers), ProductResource (full CRUD + variants/tags/reviews), CategoryResource (bilingual CRUD + sub-categories), AttributeResource (bilingual CRUD + attribute values)
-- [ ] Filament admin panel (remaining) — TapTransactionResource (read-only), RefundResource (approve/reject), CustomerResource (read-only + orders), CouponResource, feature tests, AdminSeeder run
-- [ ] Notifications module — emails via Resend (order confirm, receipt, shipping update)
+- [x] Filament admin panel — TapTransactionResource (read-only), RefundResource (approve/reject), CustomerResource (read-only + orders), CouponResource (full CRUD), AdminSeeder, 17/17 admin tests
+- [x] Notifications module — Resend installed, OrderConfirmationMail + PaymentReceiptMail + ShippingUpdateMail (queued, bilingual), listeners wired to OrderPlaced/PaymentCaptured/OrderFulfilled, 10/10 tests
 
 **PHASE 3 — Hardening** (locked until Phase 2 complete)
 Blue-green deploy, k6 load tests, security audit, Lighthouse CI, full RTL audit

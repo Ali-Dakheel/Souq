@@ -13,13 +13,13 @@ use App\Modules\Catalog\Filament\Resources\ProductResource\RelationManagers\Vari
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
 use BackedEnum;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;

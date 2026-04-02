@@ -6,12 +6,21 @@ namespace App\Modules\Cart\Models;
 
 use App\Modules\Catalog\Models\Category;
 use App\Modules\Catalog\Models\Product;
+use Database\Factories\CouponFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Coupon extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): CouponFactory
+    {
+        return CouponFactory::new();
+    }
+
     protected $fillable = [
         'code',
         'name',

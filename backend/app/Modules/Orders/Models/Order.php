@@ -7,12 +7,21 @@ namespace App\Modules\Orders\Models;
 use App\Models\User;
 use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Payments\Models\TapTransaction;
+use Database\Factories\OrderFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory(): OrderFactory
+    {
+        return OrderFactory::new();
+    }
+
     protected $fillable = [
         'order_number',
         'user_id',
