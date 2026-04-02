@@ -351,3 +351,22 @@ The `attributes` table migration has `attribute_type` enum `['color','size','mat
 
 **Filament v5 `discoverResources()` path must match actual directory structure**
 `AdminPanelProvider` calls `discoverResources(in: app_path('Modules/Catalog/Filament/Resources'), for: 'App\\Modules\\Catalog\\Filament\\Resources')` for each module. Resources auto-discovered from these paths — no manual registration needed per resource.
+
+### Phase 2 completion + test fixes — 2026-04-02
+
+**Phase 2 is fully complete — all 94 tests passing across Cart, Orders, Notifications, Admin**
+All Phase 2 items are done: Catalog, Customers, Cart, Orders, Payments, Filament admin, Notifications. 94/94 tests green. Project is ready to enter Phase 3 (Hardening).
+
+**`variants.attributes` is JSONB NOT NULL — always include `'attributes' => []` in test `Variant::create()` calls**
+Any test helper that calls `Variant::create([...])` without `'attributes' => []` will fail with an SQLite NOT NULL constraint error. The column is mandatory. Pattern to always use:
+```php
+Variant::create([
+    'product_id' => $product->id,
+    'sku'        => 'SKU-'.uniqid(),
+    'is_available' => true,
+    'attributes' => [],  // required — JSONB NOT NULL
+]);
+```
+
+**`cart_abandonments.cart_id` must be nullable with `nullOnDelete()`, NOT `cascadeOnDelete()`**
+Using `cascadeOnDelete()` on `cart_id` silently deletes the abandonment record when the parent cart is pruned — defeating the entire purpose of the table. The column is nullable with `nullOnDelete()` so the abandonment record survives after cart deletion (cart_id becomes NULL). Migration file: `2026_03_30_000004_create_cart_abandonments_table.php`.
