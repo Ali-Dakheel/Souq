@@ -47,6 +47,7 @@ class CartControllerTest extends TestCase
             'product_id' => $product->id,
             'sku' => 'SKU-'.uniqid(),
             'is_available' => true,
+            'attributes' => [],
         ]);
 
         InventoryItem::create([

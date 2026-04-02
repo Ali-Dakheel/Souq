@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('cart_abandonments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('cart_id');
+            $table->unsignedBigInteger('cart_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('session_id')->nullable();
             $table->integer('cart_total_fils')->default(0);
@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamp('recovered_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('cart_id')->references('id')->on('carts')->cascadeOnDelete();
+            $table->foreign('cart_id')->references('id')->on('carts')->nullOnDelete();
             $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
             $table->index('user_id');
             $table->index('session_id');
