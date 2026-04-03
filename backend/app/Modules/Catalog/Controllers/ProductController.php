@@ -7,6 +7,7 @@ namespace App\Modules\Catalog\Controllers;
 use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Models\BundleOption;
 use App\Modules\Catalog\Models\Product;
+use App\Modules\Catalog\Requests\CompareRequest;
 use App\Modules\Catalog\Requests\StoreProductRequest;
 use App\Modules\Catalog\Requests\UpdateProductRequest;
 use App\Modules\Catalog\Resources\BundleOptionProductResource;
@@ -15,6 +16,7 @@ use App\Modules\Catalog\Resources\DownloadableLinkResource;
 use App\Modules\Catalog\Resources\ProductCollection;
 use App\Modules\Catalog\Resources\ProductResource;
 use App\Modules\Catalog\Resources\VariantResource;
+use App\Modules\Catalog\Services\CompareService;
 use App\Modules\Catalog\Services\ProductService;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +27,8 @@ use Illuminate\Validation\ValidationException;
 class ProductController extends Controller
 {
     public function __construct(
-        private readonly ProductService $productService
+        private readonly ProductService $productService,
+        private readonly CompareService $compareService
     ) {}
 
     public function index(Request $request): ProductCollection
@@ -145,5 +148,12 @@ class ProductController extends Controller
         return (new DownloadableLinkResource($downloadableLink))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function compare(CompareRequest $request): JsonResponse
+    {
+        $result = $this->compareService->compare($request->validated('variant_ids'));
+
+        return response()->json(['data' => $result]);
     }
 }

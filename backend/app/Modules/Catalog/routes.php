@@ -33,6 +33,9 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
     Route::patch('products/{product}/variants/{variant}', [VariantController::class, 'update']);
     Route::delete('products/{product}/variants/{variant}', [VariantController::class, 'destroy']);
 
+    // Product compare — stateless attribute matrix
+    Route::post('compare', [ProductController::class, 'compare']);
+
     // Attributes + values
     Route::get('attributes', [AttributeController::class, 'index']);
     Route::post('attributes', [AttributeController::class, 'store']);

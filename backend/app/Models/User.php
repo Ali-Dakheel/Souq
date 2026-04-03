@@ -8,6 +8,7 @@ namespace App\Models;
 use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Customers\Models\CustomerGroup;
 use App\Modules\Customers\Models\CustomerProfile;
+use App\Modules\Customers\Models\Wishlist;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -60,5 +61,10 @@ class User extends Authenticatable implements FilamentUser
     public function customerGroup(): BelongsTo
     {
         return $this->belongsTo(CustomerGroup::class);
+    }
+
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
     }
 }

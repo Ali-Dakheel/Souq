@@ -4,6 +4,7 @@ use App\Modules\Customers\Controllers\AddressController;
 use App\Modules\Customers\Controllers\AuthController;
 use App\Modules\Customers\Controllers\CustomerGroupController;
 use App\Modules\Customers\Controllers\ProfileController;
+use App\Modules\Customers\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/v1')->middleware('api')->group(function () {
@@ -26,6 +27,9 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
     Route::get('groups', [CustomerGroupController::class, 'index']);
     Route::get('groups/{group}', [CustomerGroupController::class, 'show']);
 
+    // Wishlists — public shared view
+    Route::get('wishlists/shared/{token}', [WishlistController::class, 'showShared']);
+
     // Profile & addresses — rate-limited to 30 requests per minute, auth required
     Route::middleware(['auth:sanctum', 'throttle:30,1'])->group(function () {
         Route::get('customers/profile', [ProfileController::class, 'show']);
@@ -47,5 +51,12 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
         Route::delete('groups/{group}', [CustomerGroupController::class, 'destroy']);
         Route::post('groups/{group}/prices', [CustomerGroupController::class, 'setPrice']);
         Route::delete('groups/{group}/prices/{variant}', [CustomerGroupController::class, 'removePrice']);
+
+        // Wishlists — authenticated (user's own wishlist)
+        Route::get('wishlist', [WishlistController::class, 'show']);
+        Route::post('wishlist/items', [WishlistController::class, 'addItem']);
+        Route::delete('wishlist/items/{variantId}', [WishlistController::class, 'removeItem']);
+        Route::post('wishlist/share', [WishlistController::class, 'generateShareToken']);
+        Route::post('wishlist/items/{variantId}/move-to-cart', [WishlistController::class, 'moveToCart']);
     });
 });
