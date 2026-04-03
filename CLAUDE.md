@@ -227,7 +227,7 @@ bahrain-ecomm/
 
 **Phase 3C — Customer Features** (next, parallel with 3B)
 
-- [ ] 3C.1 Customer Groups — `customer_groups` table, `variant_group_prices`, `product_group_visibility`, group-aware pricing in CartService
+- [x] 3C.1 Customer Groups — `customer_groups` table, `variant_group_prices`, `product_group_visibility`, group-aware pricing in CartService (285/285 tests)
 - [ ] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token, move-to-cart, full API
 - [ ] 3C.3 Product Compare — `POST /compare` returns attribute comparison matrix (no DB — frontend state)
 
@@ -467,3 +467,11 @@ The signed download token is included in a URL path segment (`GET /downloads/{to
 
 **`DownloadableLinkPurchase` needs explicit `order()` relationship to get `user_id` for ownership check**
 The download endpoint must verify the requesting user owns the purchase. `DownloadableLinkPurchase` has `order_id` but no direct `user_id`. Add `order()` belongsTo relationship and check `$purchase->order->user_id === $request->user()->id` in `DownloadService::validateAndDecodeToken()`.
+
+### Phase 3C.1 — 2026-04-03
+
+**`CustomerGroupService::getGroupPriceForUser()` fallback must be `$variant->effective_price_fils`, NOT `$variant->price_fils`**
+`Variant.price_fils` is nullable — variants that inherit price from their parent product have `price_fils = null`. Using `$variant->price_fils` as the fallback returns null, violating the `int` return type and breaking all Cart tests. Always use `$variant->effective_price_fils`, which is a computed accessor that falls back to `product.base_price_fils` when `price_fils` is null.
+
+**Session work must be committed after each task — never leave tasks uncommitted at session end**
+Tasks 1–5 (models, migrations, service, controller, routes, CartService) were left uncommitted at the end of Session 2. The Session 3 seeder commit was made on top of them as untracked files, making the history misleading. Commit each task as it completes so session handoffs have a clean, accurate git log.
