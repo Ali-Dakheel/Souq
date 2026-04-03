@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Models;
 
+use App\Modules\Customers\Models\VariantGroupPrice;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Variant extends Model
@@ -35,6 +37,11 @@ class Variant extends Model
     public function inventory(): HasOne
     {
         return $this->hasOne(InventoryItem::class);
+    }
+
+    public function groupPrices(): HasMany
+    {
+        return $this->hasMany(VariantGroupPrice::class);
     }
 
     public function scopeAvailable(Builder $query): Builder
