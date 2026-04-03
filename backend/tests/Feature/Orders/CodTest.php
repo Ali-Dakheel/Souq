@@ -50,6 +50,7 @@ class CodTest extends TestCase
             'category_id' => $category->id,
             'base_price_fils' => $priceFils,
             'is_available' => true,
+            'product_type' => 'virtual', // virtual products don't require shipping
         ]);
 
         $variant = Variant::create([

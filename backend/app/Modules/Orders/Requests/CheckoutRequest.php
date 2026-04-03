@@ -28,6 +28,7 @@ class CheckoutRequest extends FormRequest
             'payment_method' => ['required', 'string', 'in:benefit,benefit_pay_qr,card,apple_pay,cod'],
             'shipping_address_id' => ['required', 'integer', $addressRule],
             'billing_address_id' => ['required', 'integer', $addressRule],
+            'shipping_method_id' => ['nullable', 'integer', 'exists:shipping_methods,id'],
             'guest_email' => [
                 $this->isGuestCheckout() ? 'required' : 'nullable',
                 'email',

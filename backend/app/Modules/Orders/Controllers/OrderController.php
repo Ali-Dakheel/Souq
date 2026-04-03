@@ -50,6 +50,7 @@ class OrderController extends Controller
             paymentMethod: $request->string('payment_method')->toString(),
             notes: $request->string('notes')->toString() ?: null,
             locale: $request->string('locale', 'ar')->toString(),
+            shippingMethodId: $request->input('shipping_method_id') ? (int) $request->input('shipping_method_id') : null,
         );
 
         // Both COD and card payments return the created order with 201.

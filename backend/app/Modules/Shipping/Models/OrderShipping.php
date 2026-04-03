@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderShipping extends Model
 {
+    protected $table = 'order_shipping';
+
     protected $fillable = [
         'order_id', 'shipping_method_id',
         'carrier', 'method_name_en', 'method_name_ar',

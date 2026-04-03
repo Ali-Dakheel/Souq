@@ -38,15 +38,16 @@ class ShippingService
 
     /**
      * Resolve the shipping zone for a customer address.
-     * Checks if address.governorate is in any active zone's countries array.
+     * Since CustomerAddress is Bahrain-only (no country field), all addresses use 'BH'.
+     * Checks if 'BH' is in any active zone's countries array.
      */
     public function resolveZoneForAddress(CustomerAddress $address): ?ShippingZone
     {
+        $country = 'BH'; // CustomerAddress is Bahrain-only — all addresses are 'BH'
         $zones = ShippingZone::where('is_active', true)->get();
 
         foreach ($zones as $zone) {
-            // Check if the address governorate is in the zone's countries array
-            if (in_array($address->governorate, $zone->countries ?? [], true)) {
+            if (in_array($country, $zone->countries ?? [], true)) {
                 return $zone;
             }
         }
@@ -135,9 +136,10 @@ class ShippingService
         ShippingMethod $method,
         int $rateFils
     ): OrderShipping {
-        // Idempotent guard: return existing if present
-        if ($order->shipping !== null) {
-            return $order->shipping;
+        // Idempotent guard: return existing if present (use DB query, not in-memory relation)
+        $existing = $order->shipping()->first();
+        if ($existing !== null) {
+            return $existing;
         }
 
         return OrderShipping::create([

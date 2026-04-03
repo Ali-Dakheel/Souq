@@ -16,6 +16,7 @@ use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderItem;
 use App\Modules\Orders\Models\OrderStatusHistory;
 use App\Modules\Payments\Events\CODCollected;
+use App\Modules\Shipping\Services\ShippingService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,7 @@ class OrderService
 {
     public function __construct(
         private readonly CartService $cartService,
+        private readonly ShippingService $shippingService,
     ) {}
 
     /**
@@ -33,14 +35,16 @@ class OrderService
      *
      * Flow:
      *   1. Pre-flight validation (outside transaction — fast fail)
-     *   2. DB transaction:
+     *   2. Shipping validation (if not virtual cart)
+     *   3. DB transaction:
      *      a. Lock inventory rows — re-check stock with lockForUpdate
      *      b. Create Order (temp order_number)
      *      c. Update order_number to ORD-YYYY-{id}
      *      d. Create OrderItem snapshots
      *      e. Record initial status history entry
      *      f. Fire OrderPlaced event
-     *   3. Return order with relationships loaded
+     *   4. Attach shipping to order (outside transaction)
+     *   5. Return order with relationships loaded
      *
      * NOTE: Cart is NOT cleared here. It is cleared by ClearCartOnPaymentCaptured
      * listener when the Payments module fires PaymentCaptured.
@@ -56,6 +60,7 @@ class OrderService
         string $paymentMethod,
         ?string $notes = null,
         string $locale = 'ar',
+        ?int $shippingMethodId = null,
     ): Order {
         $cart->loadMissing('items.variant.product.category', 'items.variant.inventory');
 
@@ -80,9 +85,25 @@ class OrderService
 
         $totals = $this->cartService->calculateTotals($cart);
 
+        // --- Shipping validation (if not virtual cart) ---
+        $shippingMethod = null;
+        $shippingRateFils = 0;
+        if (! $this->shippingService->isVirtualCart($cart)) {
+            if ($shippingMethodId === null) {
+                throw ValidationException::withMessages(['shipping_method_id' => ['Shipping method is required.']]);
+            }
+            $shippingMethod = $this->shippingService->validateShippingMethodForCart(
+                $cart, $shippingMethodId, $shippingAddress
+            );
+            // Compute the rate
+            $rates = $this->shippingService->getAvailableRates($cart, $shippingAddress);
+            $found = collect($rates)->firstWhere(fn ($r) => $r['method']->id === $shippingMethod->id);
+            $shippingRateFils = $found ? $found['rate_fils'] : 0;
+        }
+
         return DB::transaction(function () use (
             $cart, $userId, $guestEmail, $paymentMethod, $notes, $locale,
-            $shippingAddress, $billingAddress, $totals,
+            $shippingAddress, $billingAddress, $totals, $shippingRateFils,
         ) {
             // --- Re-check stock inside transaction with row-level locks ---
             foreach ($cart->items as $item) {
@@ -118,8 +139,8 @@ class OrderService
                 'coupon_discount_fils' => $totals['discount_fils'],
                 'coupon_code' => $cart->coupon_code,
                 'vat_fils' => $totals['vat_fils'],
-                'delivery_fee_fils' => 0,
-                'total_fils' => $totals['total_fils'],
+                'delivery_fee_fils' => $shippingRateFils,
+                'total_fils' => $totals['total_fils'] + $shippingRateFils,
                 'payment_method' => $paymentMethod,
                 'shipping_address_id' => $shippingAddress->id,
                 'shipping_address_snapshot' => $this->snapshotAddress($shippingAddress),
@@ -168,8 +189,15 @@ class OrderService
             // --- Fire event (Inventory reserves stock, Notifications sends email) ---
             OrderPlaced::dispatch($order, $eventItems);
 
-            return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']);
+            return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress', 'shipping']);
         });
+
+        // --- Attach shipping to order (outside transaction) ---
+        if ($shippingMethod !== null) {
+            $this->shippingService->attachShippingToOrder($order, $shippingMethod, $shippingRateFils);
+        }
+
+        return $order;
     }
 
     /**
