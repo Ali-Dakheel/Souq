@@ -41,17 +41,21 @@ class OrderController extends Controller
             $request->header('X-Cart-Session'),
         );
 
-        $order = $this->orderService->checkout(
-            cart: $cart,
-            userId: Auth::id(),
-            guestEmail: $request->string('guest_email')->toString() ?: null,
-            shippingAddressId: $request->integer('shipping_address_id'),
-            billingAddressId: $request->integer('billing_address_id'),
-            paymentMethod: $request->string('payment_method')->toString(),
-            notes: $request->string('notes')->toString() ?: null,
-            locale: $request->string('locale', 'ar')->toString(),
-            shippingMethodId: $request->input('shipping_method_id') ? (int) $request->input('shipping_method_id') : null,
-        );
+        try {
+            $order = $this->orderService->checkout(
+                cart: $cart,
+                userId: Auth::id(),
+                guestEmail: $request->string('guest_email')->toString() ?: null,
+                shippingAddressId: $request->integer('shipping_address_id'),
+                billingAddressId: $request->integer('billing_address_id'),
+                paymentMethod: $request->string('payment_method')->toString(),
+                notes: $request->string('notes')->toString() ?: null,
+                locale: $request->string('locale', 'ar')->toString(),
+                shippingMethodId: $request->input('shipping_method_id') ? (int) $request->input('shipping_method_id') : null,
+            );
+        } catch (\InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['shipping_method_id' => [$e->getMessage()]]);
+        }
 
         // Both COD and card payments return the created order with 201.
         // The frontend checks order.payment_method === 'cod' to decide
