@@ -20,5 +20,7 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{orderNumber}', [OrderController::class, 'show']);
+        Route::get('orders/{orderNumber}/invoice', [OrderController::class, 'invoice']);
+        Route::get('orders/{orderNumber}/shipments', [OrderController::class, 'shipments']);
     });
 });

@@ -7,6 +7,7 @@ use App\Modules\Inventory\InventoryServiceProvider;
 use App\Modules\Notifications\NotificationsServiceProvider;
 use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Payments\PaymentsServiceProvider;
+use App\Modules\Settings\SettingsServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
 use Filament\FilamentServiceProvider;
@@ -22,4 +23,5 @@ return [
     NotificationsServiceProvider::class,
     OrdersServiceProvider::class,
     PaymentsServiceProvider::class,
+    SettingsServiceProvider::class,
 ];

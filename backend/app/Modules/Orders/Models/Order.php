@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
 {
@@ -91,8 +92,23 @@ class Order extends Model
         return $this->hasMany(TapTransaction::class)->orderByDesc('attempt_number');
     }
 
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+    public function shipments(): HasMany
+    {
+        return $this->hasMany(Shipment::class);
+    }
+
+    public function isCod(): bool
+    {
+        return $this->payment_method === 'cod';
+    }
+
     public function isCancellable(): bool
     {
-        return in_array($this->order_status, ['pending', 'initiated'], true);
+        return in_array($this->order_status, ['pending', 'initiated', 'pending_collection'], true);
     }
 }

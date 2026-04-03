@@ -8,6 +8,7 @@ use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\Variant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrderItem extends Model
 {
@@ -46,5 +47,20 @@ class OrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(Variant::class);
+    }
+
+    public function shipmentItems(): HasMany
+    {
+        return $this->hasMany(ShipmentItem::class);
+    }
+
+    public function getQuantityShippedAttribute(): int
+    {
+        return $this->shipmentItems->sum('quantity_shipped');
+    }
+
+    public function getQuantityToShipAttribute(): int
+    {
+        return $this->quantity - $this->quantity_shipped;
     }
 }

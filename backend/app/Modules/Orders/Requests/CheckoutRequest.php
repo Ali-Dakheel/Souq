@@ -18,7 +18,7 @@ class CheckoutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', 'string', 'in:benefit,benefit_pay_qr,card,apple_pay'],
+            'payment_method' => ['required', 'string', 'in:benefit,benefit_pay_qr,card,apple_pay,cod'],
             'shipping_address_id' => ['required', 'integer', 'exists:customer_addresses,id'],
             'billing_address_id' => ['required', 'integer', 'exists:customer_addresses,id'],
             'guest_email' => [

@@ -148,6 +148,9 @@ bahrain-ecomm/
 | `CouponRemoved` | Cart | Cart (log) |
 | `CartAbandoned` | Cart | Cart (log — email stub TODO) |
 | `OrderCancelled` | Orders | Inventory (release reservation), Cart (release coupon usage) |
+| `InvoiceGenerated` | Orders | Notifications (send invoice email) |
+| `ShipmentCreated` | Orders | Notifications (send shipment tracking email) |
+| `CODCollected` | Payments | Notifications (send payment receipt email) |
 
 ---
 
@@ -204,8 +207,26 @@ bahrain-ecomm/
 - [x] Filament admin panel — TapTransactionResource (read-only), RefundResource (approve/reject), CustomerResource (read-only + orders), CouponResource (full CRUD), AdminSeeder, 17/17 admin tests
 - [x] Notifications module — Resend installed, OrderConfirmationMail + PaymentReceiptMail + ShippingUpdateMail (queued, bilingual), listeners wired to OrderPlaced/PaymentCaptured/OrderFulfilled, 10/10 tests
 
-**PHASE 3 — Hardening** (locked until Phase 2 complete)
-Blue-green deploy, k6 load tests, security audit, Lighthouse CI, full RTL audit
+**PHASE 2 — Commerce** (complete ✅ — 94/94 tests)
+
+**PHASE 3 — Complete Platform** (in progress)
+
+**Phase 3A — Foundation Fixes** (built, security fixes pending, tests not yet written)
+
+- [x] 3A.1 Store Settings — `Settings` module, `store_settings` table (key/value/group), `StoreSettingsService` singleton (in-memory cache, `lockForUpdate()` sequence counter), `StoreSettingsPage` Filament page (Legal/Branding/Commerce sections)
+- [x] 3A.2 Invoice Model — `invoices` + `invoice_items` tables in Orders module, `InvoiceService` (idempotent, atomic sequence + creation in single transaction, VAT-exclusive 10% per item), `GenerateInvoiceJob` (ShouldBeUnique), listener on `PaymentCaptured`, `InvoiceResource` API, `InvoiceResource` Filament (read-only), `InvoiceRelationManager` on OrderResource
+- [x] 3A.3 Shipment Model — `shipments` + `shipment_items` tables, `ShipmentService` (createShipment validates qty, dispatch outside transaction, markShipped/markDelivered fires OrderFulfilled), `ShipmentCreated` event, `ShipmentsRelationManager` with Mark Shipped/Delivered row actions, `GET /orders/{n}/shipments` API
+- [x] 3A.4 COD Payment — `cod` payment_method + `pending_collection`/`collected` order statuses, `CodCollectedMail`, `CODCollected` event (Payments namespace), `markCodCollected()` on OrderService (wrapped in transaction, refresh() for fresh state), "Mark Collected" Filament action on OrderResource
+
+**⚠️ Security fixes required before Phase 3A tests (next session START):**
+1. HIGH — `CheckoutRequest`: address ownership not scoped to Auth::id() → use `Rule::exists('customer_addresses','id')->where('user_id', Auth::id())`; add matching guard in `OrderService::checkout()` as defense-in-depth
+2. HIGH — `ShipmentService::createShipment()`: cross-order item injection → scope fetch: `$order->items()->whereIn('id', ...)->get()->keyBy('id')` instead of in-memory collection
+3. MEDIUM — `InvoiceService::generateInvoice()`: VAT computed on gross subtotal, should be on discounted subtotal; `total_fils` should be derived from computed components, not copied from `$order->total_fils`
+4. MEDIUM — `OrderService::overrideOrderStatus()`: no allowlist → add explicit status allowlist before update
+5. LOW — `InvoiceService` + `ShipmentService`: use constructor injection in `OrderController` instead of `app()`
+6. LOW — `InvoiceService::generateInvoice()`: add guard for empty `cr_number`/`vat_number` before generating (throw RuntimeException)
+
+**Phase 3B–3F** (locked until Phase 3A tests pass)
 
 ---
 
@@ -235,6 +256,50 @@ docker compose down
 ## 10. Session learnings
 
 <!-- /learn command appends here -->
+
+### Phase 3A — 2026-04-03
+
+**`StoreSettingsService` in-memory cache must store `{value, group}` per key, not just `value`**
+If the cache is a flat `[key => value]` map, `getGroup()` cannot filter by group without a DB query. Store as `[key => ['value' => ..., 'group' => ...]]` and filter in-memory. This makes both `get()` and `getGroup()` fully cache-coherent within a request.
+
+**`bulkUpdate()` on settings must have an explicit key allowlist (EDITABLE_KEYS const)**
+Without an allowlist, `bulkUpdate()` accepts `last_invoice_sequence` as a key and would reset it via the admin form. Allowlist the keys that are safe to update via the UI; enforce it inside the service method, not just in the Filament page.
+
+**`getNextInvoiceSequence()` must NOT have a create-branch — row must be guaranteed present by seeder**
+The `lockForUpdate()` only protects the update path. If the row is missing, two concurrent requests both try `StoreSetting::create()` and one gets a unique violation. Remove the else-branch; throw `RuntimeException` if the row is missing. Use `firstOrCreate()` (not `updateOrCreate()`) in the seeder for `last_invoice_sequence` to never reset a live counter on re-seed.
+
+**Invoice sequence increment and invoice row creation must be in the same DB transaction**
+If `getNextInvoiceSequence()` commits its own inner transaction before `Invoice::create()`, a crash between them burns a sequence number permanently — a Bahrain VAT compliance violation. Wrap the entire `generateInvoice()` body in `DB::transaction()` with `lockForUpdate()` on the Order row. The inner `DB::transaction()` participates via savepoint and rolls back atomically with the outer.
+
+**`unique('order_id')` constraint required on `invoices` table**
+Without a DB-level unique constraint on `invoices.order_id`, the application-level idempotency check + order lock is a best-effort guard. The unique constraint is the definitive safeguard against duplicate invoices.
+
+**`vat_rate` must be stored as integer percentage (10 = 10%), not decimal (0.1000)**
+CLAUDE.md bans decimal columns. Store VAT rate as `unsignedSmallInteger` with default 10. Update model cast to `integer`. Service writes `10` not `'0.1000'`. VAT calculation: `$vat = (int) round($subtotal * 0.10)` (multiply by 0.10 in PHP, store result as integer fils — the rate column is just for audit display).
+
+**`price_fils_per_unit` on order_items is VAT-EXCLUSIVE — document this explicitly**
+The cart adds VAT on top of the product price. Invoice items must apply VAT the same way (`item_subtotal * 0.10`). Add a PHPDoc comment in `InvoiceService::generateInvoice()` stating this assumption so future devs don't introduce double-VAT.
+
+**Events must be dispatched OUTSIDE DB transactions**
+Dispatching events (especially queued ones) inside a `DB::transaction()` means: if the transaction rolls back, the event has already fired. A queued listener will process a shipment/invoice that was never committed. Pattern: collect all data inside the transaction, return it, then dispatch events after the closing `});`. Applies to: `ShipmentService::createShipment()`, `InvoiceService::generateInvoice()`, `OrderService::markCodCollected()`.
+
+**Null-safe `?->` required everywhere user relation is accessed for email**
+Guest orders have `user_id = null`, making `$order->user` null. `$this->order->user->email` throws. Always use `$this->order->user?->email ?? $this->order->guest_email` in every Mail class `envelope()`.
+
+**`Mail::queue()` not `Mail::send()` in queued listeners for ShouldQueue mailables**
+`Mail::send()` sends synchronously regardless of `ShouldQueue` on the mailable. Use `Mail::queue()` to honour the mailable's queue configuration. Check existing listeners (`SendPaymentReceiptEmail`) for the project pattern.
+
+**`$order->refresh()` at the start of admin service methods (markCodCollected, etc.)**
+Filament passes the `$record` object from its table query cache. It may be stale. Call `$order->refresh()` before reading `order_status` for validation to ensure you're acting on current DB state.
+
+**`ShipmentService::createShipment()` must scope order item fetch to the order via DB query**
+Using `$order->items->get($id)` (in-memory collection) to validate submitted order_item_ids is fragile — it only works if `$order->items` was correctly eager-loaded. Use `$order->items()->whereIn('id', array_column($items, 'order_item_id'))->get()->keyBy('id')` for an authoritative DB-scoped check.
+
+**Address ownership must be scoped in CheckoutRequest AND in OrderService**
+`Rule::exists('customer_addresses','id')` without a `->where('user_id', Auth::id())` scope lets any authenticated user use another customer's address ID. Fix in request with scoped Rule::exists. Add defense-in-depth ownership check in OrderService::checkout() after findOrFail.
+
+**`PaymentReceiptMail` requires a `TapTransaction` — create a separate `CodCollectedMail` for COD**
+COD orders have no TapTransaction. Attempting to reuse PaymentReceiptMail for COD will crash. Create a dedicated `CodCollectedMail` that takes only the Order.
 
 ### Phase 1 — 2026-03-28
 

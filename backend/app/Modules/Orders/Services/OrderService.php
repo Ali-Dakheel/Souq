@@ -11,9 +11,11 @@ use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Events\OrderFulfilled;
 use App\Modules\Orders\Events\OrderPlaced;
+use App\Modules\Orders\Jobs\GenerateInvoiceJob;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\OrderItem;
 use App\Modules\Orders\Models\OrderStatusHistory;
+use App\Modules\Payments\Events\CODCollected;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -93,12 +95,15 @@ class OrderService
                 }
             }
 
+            $isCod = $paymentMethod === 'cod';
+            $initialStatus = $isCod ? 'pending_collection' : 'pending';
+
             // --- Create order ---
             $order = Order::create([
                 'order_number' => 'TMP-'.Str::uuid(),
                 'user_id' => $userId,
                 'guest_email' => $guestEmail,
-                'order_status' => 'pending',
+                'order_status' => $initialStatus,
                 'subtotal_fils' => $totals['subtotal_fils'],
                 'coupon_discount_fils' => $totals['discount_fils'],
                 'coupon_code' => $cart->coupon_code,
@@ -143,13 +148,62 @@ class OrderService
             }
 
             // --- Initial status history entry ---
-            $this->recordStatusChange($order, 'pending', 'system', 'Order placed.');
+            if ($isCod) {
+                $this->recordStatusChange($order, 'pending_collection', 'system', 'COD order — awaiting cash collection.');
+                GenerateInvoiceJob::dispatch($order->id);
+            } else {
+                $this->recordStatusChange($order, 'pending', 'system', 'Order placed.');
+            }
 
             // --- Fire event (Inventory reserves stock, Notifications sends email) ---
             OrderPlaced::dispatch($order, $eventItems);
 
             return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']);
         });
+    }
+
+    /**
+     * Mark a COD order as collected (payment received in cash).
+     * Called by admin via Filament action.
+     *
+     * @throws \InvalidArgumentException if not COD or wrong status
+     */
+    public function markCodCollected(Order $order, ?string $note = null): Order
+    {
+        $order->refresh(); // ensure we're working with current DB state
+
+        if (! $order->isCod()) {
+            throw new \InvalidArgumentException(
+                "Order {$order->order_number} is not a COD order."
+            );
+        }
+
+        if ($order->order_status !== 'pending_collection') {
+            throw new \InvalidArgumentException(
+                "Order {$order->order_number} cannot be marked collected (status: {$order->order_status})."
+            );
+        }
+
+        $oldStatus = $order->order_status; // capture BEFORE update
+
+        DB::transaction(function () use ($order, $oldStatus, $note) {
+            $order->update([
+                'order_status' => 'collected',
+                'paid_at' => now(),
+            ]);
+
+            $this->recordStatusChange(
+                $order,
+                'collected',
+                'admin',
+                $note ?? 'COD payment collected.',
+                $oldStatus,
+            );
+        });
+
+        CODCollected::dispatch($order->fresh());
+
+        return $order->fresh()->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']);
     }
 
     /**

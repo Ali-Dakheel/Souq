@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(\"/C/Users/User/.config/herd/bin/php84/php\" artisan:*)",
+      "Bash(\"/C/Users/User/.config/herd/bin/php84/php\" vendor/bin/pint --dirty --format agent)"
+    ]
+  }
+}

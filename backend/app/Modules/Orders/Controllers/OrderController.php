@@ -9,9 +9,13 @@ use App\Modules\Cart\Services\CartService;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Requests\CancelOrderRequest;
 use App\Modules\Orders\Requests\CheckoutRequest;
+use App\Modules\Orders\Resources\InvoiceResource;
 use App\Modules\Orders\Resources\OrderListResource;
 use App\Modules\Orders\Resources\OrderResource;
+use App\Modules\Orders\Resources\ShipmentResource;
+use App\Modules\Orders\Services\InvoiceService;
 use App\Modules\Orders\Services\OrderService;
+use App\Modules\Orders\Services\ShipmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +50,9 @@ class OrderController extends Controller
             locale: $request->string('locale', 'ar')->toString(),
         );
 
+        // Both COD and card payments return the created order with 201.
+        // The frontend checks order.payment_method === 'cod' to decide
+        // whether to skip the Tap charge creation step.
         return (new OrderResource($order))
             ->response()
             ->setStatusCode(201);
@@ -108,6 +115,38 @@ class OrderController extends Controller
         return (new OrderResource($order))
             ->response()
             ->setStatusCode(200);
+    }
+
+    /**
+     * GET /api/v1/orders/{orderNumber}/invoice
+     * Get the invoice for an order (authenticated owner only).
+     */
+    public function invoice(string $orderNumber): JsonResponse
+    {
+        $order = $this->orderService->getOrderByNumber($orderNumber, Auth::id());
+        $invoice = app(InvoiceService::class)->getInvoiceForOrder($order);
+
+        if (! $invoice) {
+            return response()->json(['message' => 'Invoice not yet generated.'], 404);
+        }
+
+        return (new InvoiceResource($invoice->load('items')))
+            ->response()
+            ->setStatusCode(200);
+    }
+
+    /**
+     * GET /api/v1/orders/{orderNumber}/shipments
+     * Get all shipments for an order (authenticated owner only).
+     */
+    public function shipments(string $orderNumber): JsonResponse
+    {
+        $order = $this->orderService->getOrderByNumber($orderNumber, Auth::id());
+        $shipments = app(ShipmentService::class)->getShipmentsForOrder($order);
+
+        return response()->json([
+            'data' => ShipmentResource::collection($shipments),
+        ]);
     }
 
     /**

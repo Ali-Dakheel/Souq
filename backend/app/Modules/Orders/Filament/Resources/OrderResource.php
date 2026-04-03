@@ -6,7 +6,9 @@ namespace App\Modules\Orders\Filament\Resources;
 
 use App\Modules\Orders\Filament\Resources\OrderResource\Pages\ListOrders;
 use App\Modules\Orders\Filament\Resources\OrderResource\Pages\ViewOrder;
+use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\InvoiceRelationManager;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\OrderItemsRelationManager;
+use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\ShipmentsRelationManager;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\StatusHistoryRelationManager;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderService;
@@ -19,7 +21,6 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -48,15 +49,16 @@ class OrderResource extends Resource
                 TextColumn::make('user.name')
                     ->label('Customer')
                     ->searchable(),
-                BadgeColumn::make('order_status')
+                TextColumn::make('order_status')
                     ->label('Status')
-                    ->colors([
-                        'warning' => 'pending',
-                        'info' => ['initiated', 'processing'],
-                        'success' => ['paid', 'fulfilled'],
-                        'danger' => ['cancelled', 'failed'],
-                        'gray' => 'refunded',
-                    ]),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending', 'pending_collection' => 'warning',
+                        'initiated', 'processing' => 'info',
+                        'paid', 'fulfilled', 'collected' => 'success',
+                        'cancelled', 'failed' => 'danger',
+                        default => 'gray',
+                    }),
                 TextColumn::make('total_fils')
                     ->label('Total (BHD)')
                     ->formatStateUsing(fn (int $state): string => number_format($state / 1000, 3).' BHD'),
@@ -70,6 +72,31 @@ class OrderResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->actions([
                 ViewAction::make(),
+                Action::make('mark_collected')
+                    ->label('Mark Collected')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn (Order $record): bool => $record->isCod() && $record->order_status === 'pending_collection')
+                    ->form([
+                        Textarea::make('note')
+                            ->label('Collection Note (optional)')
+                            ->nullable(),
+                    ])
+                    ->action(function (Order $record, array $data): void {
+                        try {
+                            app(OrderService::class)->markCodCollected($record, $data['note'] ?? null);
+                            Notification::make()
+                                ->title('COD payment marked as collected.')
+                                ->success()
+                                ->send();
+                        } catch (\InvalidArgumentException $e) {
+                            Notification::make()
+                                ->title($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
                 Action::make('fulfill')
                     ->label('Mark Fulfilled')
                     ->icon('heroicon-o-check-circle')
@@ -124,6 +151,10 @@ class OrderResource extends Resource
                                 'cancelled' => 'Cancelled',
                                 'failed' => 'Failed',
                                 'refunded' => 'Refunded',
+                                'shipped' => 'Shipped',
+                                'delivered' => 'Delivered',
+                                'pending_collection' => 'Pending Collection (COD)',
+                                'collected' => 'Collected (COD)',
                             ])
                             ->required(),
                         Textarea::make('note')
@@ -149,6 +180,8 @@ class OrderResource extends Resource
         return [
             OrderItemsRelationManager::class,
             StatusHistoryRelationManager::class,
+            InvoiceRelationManager::class,
+            ShipmentsRelationManager::class,
         ];
     }
 
