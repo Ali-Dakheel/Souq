@@ -101,7 +101,7 @@ class OrderService
             $shippingRateFils = $found ? $found['rate_fils'] : 0;
         }
 
-        return DB::transaction(function () use (
+        $order = DB::transaction(function () use (
             $cart, $userId, $guestEmail, $paymentMethod, $notes, $locale,
             $shippingAddress, $billingAddress, $totals, $shippingRateFils,
         ) {
@@ -189,12 +189,13 @@ class OrderService
             // --- Fire event (Inventory reserves stock, Notifications sends email) ---
             OrderPlaced::dispatch($order, $eventItems);
 
-            return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress', 'shipping']);
+            return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']);
         });
 
         // --- Attach shipping to order (outside transaction) ---
         if ($shippingMethod !== null) {
             $this->shippingService->attachShippingToOrder($order, $shippingMethod, $shippingRateFils);
+            $order->load('shipping');
         }
 
         return $order;

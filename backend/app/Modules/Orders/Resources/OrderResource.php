@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Orders\Resources;
 
 use App\Modules\Orders\Models\Order;
+use App\Modules\Shipping\Resources\OrderShippingResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -39,6 +40,7 @@ class OrderResource extends JsonResource
                 $this->billing_address_snapshot !== null,
                 fn () => $this->billing_address_snapshot,
             ),
+            'shipping' => new OrderShippingResource($this->whenLoaded('shipping')),
         ];
     }
 }
