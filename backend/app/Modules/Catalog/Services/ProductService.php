@@ -227,4 +227,37 @@ class ProductService
 
         return $product->downloadableLinks()->create($data);
     }
+
+    public function searchProducts(
+        string $query,
+        array $filters = [],
+        int $perPage = 20,
+        int $page = 1
+    ): LengthAwarePaginator {
+        $builder = Product::search($query);
+
+        if (isset($filters['category'])) {
+            $builder->where('category_ids', (int) $filters['category']);
+        }
+        if (isset($filters['min_price'])) {
+            $builder->where('price_fils', '>=', (int) $filters['min_price']);
+        }
+        if (isset($filters['max_price'])) {
+            $builder->where('price_fils', '<=', (int) $filters['max_price']);
+        }
+        if (isset($filters['in_stock'])) {
+            $builder->where('in_stock', filter_var($filters['in_stock'], FILTER_VALIDATE_BOOLEAN));
+        }
+        if (isset($filters['product_type'])) {
+            $builder->where('product_type', $filters['product_type']);
+        }
+
+        match ($filters['sort'] ?? null) {
+            'price_asc' => $builder->orderBy('price_fils', 'asc'),
+            'price_desc' => $builder->orderBy('price_fils', 'desc'),
+            default => null,
+        };
+
+        return $builder->paginate($perPage, 'page', $page);
+    }
 }

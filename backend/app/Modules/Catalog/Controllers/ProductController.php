@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Catalog\Models\BundleOption;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Requests\CompareRequest;
+use App\Modules\Catalog\Requests\SearchRequest;
 use App\Modules\Catalog\Requests\StoreProductRequest;
 use App\Modules\Catalog\Requests\UpdateProductRequest;
 use App\Modules\Catalog\Resources\BundleOptionProductResource;
@@ -23,6 +24,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Validation\ValidationException;
+use Meilisearch\Exceptions\ApiException;
 
 class ProductController extends Controller
 {
@@ -155,5 +157,21 @@ class ProductController extends Controller
         $result = $this->compareService->compare($request->validated('variant_ids'));
 
         return response()->json(['data' => $result]);
+    }
+
+    public function search(SearchRequest $request): ProductCollection
+    {
+        try {
+            $results = $this->productService->searchProducts(
+                $request->validated('q'),
+                $request->only(['category', 'min_price', 'max_price', 'in_stock', 'product_type', 'sort']),
+                (int) $request->integer('per_page', 20),
+                (int) $request->integer('page', 1),
+            );
+
+            return new ProductCollection($results);
+        } catch (ApiException $e) {
+            abort(503, 'Search service temporarily unavailable.');
+        }
     }
 }
