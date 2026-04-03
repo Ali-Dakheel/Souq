@@ -228,8 +228,8 @@ bahrain-ecomm/
 **Phase 3C — Customer Features** (next, parallel with 3B)
 
 - [x] 3C.1 Customer Groups — `customer_groups` table, `variant_group_prices`, `product_group_visibility`, group-aware pricing in CartService (285/285 tests)
-- [ ] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token, move-to-cart, full API
-- [ ] 3C.3 Product Compare — `POST /compare` returns attribute comparison matrix (no DB — frontend state)
+- [x] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token (UUID), `is_public` flag, move-to-cart via CartService, full API (318/318 tests)
+- [x] 3C.3 Product Compare — `POST /compare` accepts up to 4 variant IDs, returns attribute matrix (null-padded), stateless, no DB (318/318 tests)
 
 **Phase 3D–3F** (locked until 3B + 3C complete)
 
