@@ -222,7 +222,7 @@ bahrain-ecomm/
 
 **Phase 3B — Catalog Expansion** (next)
 
-- [ ] 3B.1 Product Types — `product_type` enum (`simple`, `configurable`, `bundle`, `downloadable`, `virtual`), bundle tables (`bundle_options`, `bundle_option_products`), downloadable tables (`downloadable_links`, `downloadable_link_purchases`), download token endpoint
+- [x] 3B.1 Product Types — `product_type` enum (`simple`, `configurable`, `bundle`, `downloadable`, `virtual`), bundle tables (`bundle_options`, `bundle_option_products`), downloadable tables (`downloadable_links`, `downloadable_link_purchases`), download token endpoint (265/265 tests)
 - [ ] 3B.2 Meilisearch — `ProductObserver` → `IndexProductJob`, bilingual index config, `GET /search` API
 
 **Phase 3C — Customer Features** (next, parallel with 3B)
@@ -444,3 +444,26 @@ Variant::create([
 
 **`cart_abandonments.cart_id` must be nullable with `nullOnDelete()`, NOT `cascadeOnDelete()`**
 Using `cascadeOnDelete()` on `cart_id` silently deletes the abandonment record when the parent cart is pruned — defeating the entire purpose of the table. The column is nullable with `nullOnDelete()` so the abandonment record survives after cart deletion (cart_id becomes NULL). Migration file: `2026_03_30_000004_create_cart_abandonments_table.php`.
+
+### Phase 3B.1 — 2026-04-03
+
+**`InvalidArgumentException` from service type guards must be caught in controller and re-thrown as `ValidationException`**
+`ProductService::createBundleOption()` and `createDownloadableLink()` throw `\InvalidArgumentException` for wrong product types. Without a try/catch in the controller, these bubble up as 500. Wrap with `try/catch (\InvalidArgumentException $e)` and re-throw as `ValidationException::withMessages(['product_type' => [$e->getMessage()]])` to return 422. Same pattern applies to any service guard methods added in future modules.
+
+**`UniqueConstraintViolationException` from DB must be caught for user-facing 422 responses**
+When adding a product to a bundle option for the second time, the DB unique constraint fires `\Illuminate\Database\UniqueConstraintViolationException`. Catch it in the controller and re-throw as `ValidationException` to return 422 instead of 500.
+
+**`product_type` column must be a plain `string` column, NOT a DB enum, for SQLite test compatibility**
+PostgreSQL supports native enums but SQLite (used in testing) does not support CHECK constraint alteration via `ALTER TABLE ... DROP CONSTRAINT`. Use `$table->string('product_type')->default('simple')` and enforce valid values via Form Request `Rule::in([...])` at the application layer only.
+
+**`ProductController::show()` must load `bundleOptions` and `downloadableLinks` relationships**
+`ProductResource` uses `whenLoaded()` for bundle_options and downloadable_links. If show() only loads `['category.image', 'variants.inventory', 'tags']`, those keys will be absent from the API response. Add `'bundleOptions'` and `'downloadableLinks'` to the load() call so the show endpoint always includes them.
+
+**`DownloadableLinkResource` must NEVER include `file_path` in JSON output**
+The file_path is a server filesystem path stored in the DB. Exposing it in the API response leaks internal path structure and allows clients to infer the storage layout. Explicitly omit it from the resource's `toArray()` — the test `assertArrayNotHasKey('file_path', ...)` enforces this.
+
+**DownloadService token payload: use base64url (not standard base64) for URL safety**
+The signed download token is included in a URL path segment (`GET /downloads/{token}`). Standard base64 uses `+` and `/` which conflict with URL parsing. Use `base64_encode` then `strtr($b64, '+/', '-_')` and strip `=` padding for URL-safe tokens. Reverse in `validateAndDecodeToken`.
+
+**`DownloadableLinkPurchase` needs explicit `order()` relationship to get `user_id` for ownership check**
+The download endpoint must verify the requesting user owns the purchase. `DownloadableLinkPurchase` has `order_id` but no direct `user_id`. Add `order()` belongsTo relationship and check `$purchase->order->user_id === $request->user()->id` in `DownloadService::validateAndDecodeToken()`.
