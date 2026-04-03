@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Scout\Searchable;
 
 class Product extends Model
 {
-    use SoftDeletes;
+    use Searchable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -130,5 +131,33 @@ class Product extends Model
             ->values();
 
         return $prices->isEmpty() ? $this->base_price_fils : (int) $prices->min();
+    }
+
+    public function shouldBeSearchable(): bool
+    {
+        return (bool) $this->is_available;
+    }
+
+    public function toSearchableArray(): array
+    {
+        $this->loadMissing(['category', 'variants.inventory', 'tags']);
+
+        return [
+            'id' => $this->id,
+            'name_en' => $this->name['en'] ?? '',
+            'name_ar' => $this->name['ar'] ?? '',
+            'description_en' => $this->description['en'] ?? '',
+            'description_ar' => $this->description['ar'] ?? '',
+            'sku_list' => $this->variants->pluck('sku')->toArray(),
+            'category_ids' => array_filter([$this->category_id]),
+            'category_names_en' => [$this->category?->name['en'] ?? ''],
+            'category_names_ar' => [$this->category?->name['ar'] ?? ''],
+            'price_fils' => $this->base_price_fils,
+            'is_active' => $this->is_available,
+            'in_stock' => $this->variants
+                ->sum(fn ($v) => $v->inventory?->quantity_available ?? 0) > 0,
+            'product_type' => $this->product_type,
+            'tags' => $this->tags->pluck('name')->toArray(),
+        ];
     }
 }
