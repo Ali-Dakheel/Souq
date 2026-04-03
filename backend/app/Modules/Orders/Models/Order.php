@@ -7,6 +7,7 @@ namespace App\Modules\Orders\Models;
 use App\Models\User;
 use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Payments\Models\TapTransaction;
+use App\Modules\Shipping\Models\OrderShipping;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,8 +40,6 @@ class Order extends Model
         'shipping_address_snapshot',
         'billing_address_id',
         'billing_address_snapshot',
-        'delivery_zone_id',
-        'delivery_method_id',
         'notes',
         'locale',
         'tracking_number',
@@ -100,6 +99,11 @@ class Order extends Model
     public function shipments(): HasMany
     {
         return $this->hasMany(Shipment::class);
+    }
+
+    public function shipping(): HasOne
+    {
+        return $this->hasOne(OrderShipping::class);
     }
 
     public function isCod(): bool
