@@ -183,8 +183,8 @@ class ProductTypeTest extends TestCase
                 'sort_order' => 1,
             ]);
 
-        // InvalidArgumentException bubbles up as 500 since no exception handler converts it
-        $response->assertServerError();
+        $response->assertUnprocessable();
+        $this->assertArrayHasKey('product_type', $response->json('errors'));
     }
 
     public function test_create_bundle_option_requires_name_en(): void
@@ -276,7 +276,7 @@ class ProductTypeTest extends TestCase
                 ]
             )->assertCreated();
 
-        // Second add should fail with unique constraint (500 since not validated at controller level)
+        // Second add should fail with unique constraint
         $response = $this->actingAs($user, 'sanctum')
             ->postJson(
                 "/api/v1/products/{$bundleProduct->id}/bundle-options/{$option->id}/products",
@@ -286,7 +286,8 @@ class ProductTypeTest extends TestCase
                 ]
             );
 
-        $response->assertServerError();
+        $response->assertUnprocessable();
+        $this->assertArrayHasKey('product_id', $response->json('errors'));
     }
 
     public function test_product_resource_shows_product_type(): void
@@ -297,6 +298,49 @@ class ProductTypeTest extends TestCase
 
         $response->assertOk();
         $response->assertJsonPath('data.product_type', 'bundle');
+    }
+
+    public function test_product_resource_includes_bundle_options_when_loaded(): void
+    {
+        $product = $this->createProduct('bundle');
+        $user = User::factory()->create();
+
+        // Create a bundle option
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/v1/products/{$product->id}/bundle-options", [
+                'name_en' => 'Choose Size',
+                'name_ar' => 'اختر الحجم',
+                'required' => true,
+                'sort_order' => 1,
+            ])->assertCreated();
+
+        $response = $this->getJson("/api/v1/products/{$product->id}");
+
+        $response->assertOk();
+        $this->assertArrayHasKey('bundle_options', $response->json('data'));
+        $this->assertCount(1, $response->json('data.bundle_options'));
+    }
+
+    public function test_product_resource_includes_downloadable_links_when_loaded(): void
+    {
+        $product = $this->createProduct('downloadable');
+        $user = User::factory()->create();
+
+        // Create a downloadable link
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/v1/products/{$product->id}/downloadable-links", [
+                'name_en' => 'Ebook PDF',
+                'name_ar' => 'كتاب إلكتروني',
+                'file_path' => 'downloads/ebook.pdf',
+                'downloads_allowed' => 3,
+                'sort_order' => 0,
+            ])->assertCreated();
+
+        $response = $this->getJson("/api/v1/products/{$product->id}");
+
+        $response->assertOk();
+        $this->assertArrayHasKey('downloadable_links', $response->json('data'));
+        $this->assertCount(1, $response->json('data.downloadable_links'));
     }
 
     // -----------------------------------------------------------------------
@@ -338,8 +382,8 @@ class ProductTypeTest extends TestCase
                 'sort_order' => 0,
             ]);
 
-        // InvalidArgumentException bubbles up as 500
-        $response->assertServerError();
+        $response->assertUnprocessable();
+        $this->assertArrayHasKey('product_type', $response->json('errors'));
     }
 
     public function test_create_downloadable_link_requires_name_en(): void

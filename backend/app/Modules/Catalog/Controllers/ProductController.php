@@ -16,9 +16,11 @@ use App\Modules\Catalog\Resources\ProductCollection;
 use App\Modules\Catalog\Resources\ProductResource;
 use App\Modules\Catalog\Resources\VariantResource;
 use App\Modules\Catalog\Services\ProductService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -56,7 +58,7 @@ class ProductController extends Controller
 
     public function show(Product $product): ProductResource
     {
-        $product->load(['category.image', 'variants.inventory', 'tags']);
+        $product->load(['category.image', 'variants.inventory', 'tags', 'bundleOptions', 'downloadableLinks']);
 
         return new ProductResource($product);
     }
@@ -91,7 +93,11 @@ class ProductController extends Controller
             'sort_order' => ['integer', 'min:0'],
         ]);
 
-        $bundleOption = $this->productService->createBundleOption($product, $validated);
+        try {
+            $bundleOption = $this->productService->createBundleOption($product, $validated);
+        } catch (\InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['product_type' => [$e->getMessage()]]);
+        }
 
         return (new BundleOptionResource($bundleOption))
             ->response()
@@ -109,7 +115,11 @@ class ProductController extends Controller
             'sort_order' => ['integer', 'min:0'],
         ]);
 
-        $bundleOptionProduct = $this->productService->addProductToBundleOption($option, $validated);
+        try {
+            $bundleOptionProduct = $this->productService->addProductToBundleOption($option, $validated);
+        } catch (UniqueConstraintViolationException $e) {
+            throw ValidationException::withMessages(['product_id' => ['This product is already in the bundle option.']]);
+        }
 
         return (new BundleOptionProductResource($bundleOptionProduct))
             ->response()
@@ -126,7 +136,11 @@ class ProductController extends Controller
             'sort_order' => ['integer', 'min:0'],
         ]);
 
-        $downloadableLink = $this->productService->createDownloadableLink($product, $validated);
+        try {
+            $downloadableLink = $this->productService->createDownloadableLink($product, $validated);
+        } catch (\InvalidArgumentException $e) {
+            throw ValidationException::withMessages(['product_type' => [$e->getMessage()]]);
+        }
 
         return (new DownloadableLinkResource($downloadableLink))
             ->response()
