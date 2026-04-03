@@ -16,7 +16,9 @@ use App\Modules\Cart\Models\CartAbandonment;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Cart\Models\Coupon;
 use App\Modules\Catalog\Models\Variant;
+use App\Modules\Customers\Services\CustomerGroupService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -24,6 +26,7 @@ class CartService
 {
     public function __construct(
         private readonly CouponService $couponService,
+        private readonly CustomerGroupService $customerGroupService,
     ) {}
 
     /**
@@ -82,7 +85,7 @@ class CartService
                 'cart_id' => $cart->id,
                 'variant_id' => $variantId,
                 'quantity' => $newQuantity,
-                'price_fils_snapshot' => $variant->effective_price_fils,
+                'price_fils_snapshot' => $this->customerGroupService->getGroupPriceForUser(Auth::user(), $variant),
             ]);
         }
 
