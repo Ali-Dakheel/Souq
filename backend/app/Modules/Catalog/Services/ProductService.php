@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Services;
 
+use App\Modules\Catalog\Models\BundleOption;
+use App\Modules\Catalog\Models\BundleOptionProduct;
+use App\Modules\Catalog\Models\DownloadableLink;
 use App\Modules\Catalog\Models\InventoryItem;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Models\Variant;
@@ -200,5 +203,28 @@ class ProductService
         return Product::where('slug', $slug)
             ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
             ->exists();
+    }
+
+    public function createBundleOption(Product $product, array $data): BundleOption
+    {
+        if (! $product->isBundle()) {
+            throw new \InvalidArgumentException('Product must be of type "bundle" to add bundle options.');
+        }
+
+        return $product->bundleOptions()->create($data);
+    }
+
+    public function addProductToBundleOption(BundleOption $option, array $data): BundleOptionProduct
+    {
+        return $option->products()->create($data);
+    }
+
+    public function createDownloadableLink(Product $product, array $data): DownloadableLink
+    {
+        if (! $product->isDownloadable()) {
+            throw new \InvalidArgumentException('Product must be of type "downloadable" to add downloadable links.');
+        }
+
+        return $product->downloadableLinks()->create($data);
     }
 }

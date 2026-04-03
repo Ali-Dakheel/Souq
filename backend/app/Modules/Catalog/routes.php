@@ -43,4 +43,11 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
     Route::put('attributes/{attribute}/values/{value}', [AttributeController::class, 'updateValue']);
     Route::patch('attributes/{attribute}/values/{value}', [AttributeController::class, 'updateValue']);
     Route::delete('attributes/{attribute}/values/{value}', [AttributeController::class, 'destroyValue']);
+
+    // Bundle options and downloadable links (authenticated)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('products/{product}/bundle-options', [ProductController::class, 'storeBundleOption']);
+        Route::post('products/{product}/bundle-options/{option}/products', [ProductController::class, 'addBundleOptionProduct']);
+        Route::post('products/{product}/downloadable-links', [ProductController::class, 'storeDownloadableLink']);
+    });
 });

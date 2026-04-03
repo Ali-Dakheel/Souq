@@ -28,8 +28,11 @@ class ProductResource extends JsonResource
             'is_available' => $this->is_available,
             'images' => $this->images ?? [],
             'sort_order' => $this->sort_order,
+            'product_type' => $this->product_type,
             'category' => new CategoryResource($this->whenLoaded('category')),
             'variants' => VariantResource::collection($this->whenLoaded('variants')),
+            'bundle_options' => BundleOptionResource::collection($this->whenLoaded('bundleOptions')),
+            'downloadable_links' => DownloadableLinkResource::collection($this->whenLoaded('downloadableLinks')),
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->map(fn ($tag) => [
                 'id' => $tag->id,
                 'name' => $tag->name,

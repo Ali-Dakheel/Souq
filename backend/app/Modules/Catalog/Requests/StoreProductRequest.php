@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -29,6 +30,7 @@ class StoreProductRequest extends FormRequest
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'base_price_fils' => ['required', 'integer', 'min:0'],
             'is_available' => ['sometimes', 'boolean'],
+            'product_type' => ['sometimes', 'string', Rule::in(['simple', 'configurable', 'bundle', 'downloadable', 'virtual'])],
             'images' => ['sometimes', 'nullable', 'array'],
             'images.*' => ['string', 'max:1000'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],

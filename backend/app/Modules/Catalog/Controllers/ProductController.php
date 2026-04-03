@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Catalog\Models\BundleOption;
 use App\Modules\Catalog\Models\Product;
 use App\Modules\Catalog\Requests\StoreProductRequest;
 use App\Modules\Catalog\Requests\UpdateProductRequest;
+use App\Modules\Catalog\Resources\BundleOptionProductResource;
+use App\Modules\Catalog\Resources\BundleOptionResource;
+use App\Modules\Catalog\Resources\DownloadableLinkResource;
 use App\Modules\Catalog\Resources\ProductCollection;
 use App\Modules\Catalog\Resources\ProductResource;
 use App\Modules\Catalog\Resources\VariantResource;
@@ -76,5 +80,56 @@ class ProductController extends Controller
         $product->load('variants.inventory');
 
         return VariantResource::collection($product->variants);
+    }
+
+    public function storeBundleOption(Request $request, Product $product): JsonResponse
+    {
+        $validated = $request->validate([
+            'name_en' => ['required', 'string', 'max:255'],
+            'name_ar' => ['required', 'string', 'max:255'],
+            'required' => ['boolean'],
+            'sort_order' => ['integer', 'min:0'],
+        ]);
+
+        $bundleOption = $this->productService->createBundleOption($product, $validated);
+
+        return (new BundleOptionResource($bundleOption))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function addBundleOptionProduct(Request $request, Product $product, BundleOption $option): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_id' => ['required', 'exists:products,id'],
+            'default_quantity' => ['integer', 'min:1'],
+            'min_quantity' => ['integer', 'min:1'],
+            'max_quantity' => ['integer', 'min:1'],
+            'price_override_fils' => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['integer', 'min:0'],
+        ]);
+
+        $bundleOptionProduct = $this->productService->addProductToBundleOption($option, $validated);
+
+        return (new BundleOptionProductResource($bundleOptionProduct))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function storeDownloadableLink(Request $request, Product $product): JsonResponse
+    {
+        $validated = $request->validate([
+            'name_en' => ['required', 'string', 'max:255'],
+            'name_ar' => ['required', 'string', 'max:255'],
+            'file_path' => ['required', 'string', 'max:500'],
+            'downloads_allowed' => ['integer', 'min:0'],
+            'sort_order' => ['integer', 'min:0'],
+        ]);
+
+        $downloadableLink = $this->productService->createDownloadableLink($product, $validated);
+
+        return (new DownloadableLinkResource($downloadableLink))
+            ->response()
+            ->setStatusCode(201);
     }
 }

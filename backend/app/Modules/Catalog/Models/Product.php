@@ -24,6 +24,7 @@ class Product extends Model
         'is_available',
         'images',
         'sort_order',
+        'product_type',
     ];
 
     protected $casts = [
@@ -58,6 +59,41 @@ class Product extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
+    }
+
+    public function bundleOptions(): HasMany
+    {
+        return $this->hasMany(BundleOption::class);
+    }
+
+    public function downloadableLinks(): HasMany
+    {
+        return $this->hasMany(DownloadableLink::class);
+    }
+
+    public function isBundle(): bool
+    {
+        return $this->product_type === 'bundle';
+    }
+
+    public function isDownloadable(): bool
+    {
+        return $this->product_type === 'downloadable';
+    }
+
+    public function isVirtual(): bool
+    {
+        return $this->product_type === 'virtual';
+    }
+
+    public function isSimple(): bool
+    {
+        return $this->product_type === 'simple';
+    }
+
+    public function isConfigurable(): bool
+    {
+        return $this->product_type === 'configurable';
     }
 
     public function scopeAvailable(Builder $query): Builder
