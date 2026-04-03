@@ -8,6 +8,7 @@ use App\Modules\Orders\Filament\Resources\OrderResource\Pages\ListOrders;
 use App\Modules\Orders\Filament\Resources\OrderResource\Pages\ViewOrder;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\InvoiceRelationManager;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\OrderItemsRelationManager;
+use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\OrderShippingRelationManager;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\ShipmentsRelationManager;
 use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\StatusHistoryRelationManager;
 use App\Modules\Orders\Models\Order;
@@ -182,6 +183,7 @@ class OrderResource extends Resource
             StatusHistoryRelationManager::class,
             InvoiceRelationManager::class,
             ShipmentsRelationManager::class,
+            OrderShippingRelationManager::class,
         ];
     }
 
