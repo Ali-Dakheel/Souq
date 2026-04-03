@@ -33,6 +33,9 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
     Route::patch('products/{product}/variants/{variant}', [VariantController::class, 'update']);
     Route::delete('products/{product}/variants/{variant}', [VariantController::class, 'destroy']);
 
+    // Search — Meilisearch full-text
+    Route::get('search', [ProductController::class, 'search'])->middleware('throttle:120,1');
+
     // Product compare — stateless attribute matrix
     Route::post('compare', [ProductController::class, 'compare']);
 
