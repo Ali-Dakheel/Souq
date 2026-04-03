@@ -211,22 +211,31 @@ bahrain-ecomm/
 
 **PHASE 3 — Complete Platform** (in progress)
 
-**Phase 3A — Foundation Fixes** (built, security fixes pending, tests not yet written)
+**Phase 3A — Foundation Fixes** (complete ✅ — 221/221 tests)
 
 - [x] 3A.1 Store Settings — `Settings` module, `store_settings` table (key/value/group), `StoreSettingsService` singleton (in-memory cache, `lockForUpdate()` sequence counter), `StoreSettingsPage` Filament page (Legal/Branding/Commerce sections)
-- [x] 3A.2 Invoice Model — `invoices` + `invoice_items` tables in Orders module, `InvoiceService` (idempotent, atomic sequence + creation in single transaction, VAT-exclusive 10% per item), `GenerateInvoiceJob` (ShouldBeUnique), listener on `PaymentCaptured`, `InvoiceResource` API, `InvoiceResource` Filament (read-only), `InvoiceRelationManager` on OrderResource
-- [x] 3A.3 Shipment Model — `shipments` + `shipment_items` tables, `ShipmentService` (createShipment validates qty, dispatch outside transaction, markShipped/markDelivered fires OrderFulfilled), `ShipmentCreated` event, `ShipmentsRelationManager` with Mark Shipped/Delivered row actions, `GET /orders/{n}/shipments` API
+- [x] 3A.2 Invoice Model — `invoices` + `invoice_items` tables in Orders module, `InvoiceService` (idempotent, atomic sequence + creation in single transaction, VAT on discounted subtotal, total derived from components), `GenerateInvoiceJob` (ShouldBeUnique), listener on `PaymentCaptured`, `InvoiceResource` API, `InvoiceResource` Filament (read-only), `InvoiceRelationManager` on OrderResource
+- [x] 3A.3 Shipment Model — `shipments` + `shipment_items` tables, `ShipmentService` (createShipment validates qty, DB-scoped item fetch prevents cross-order injection, dispatch outside transaction, markShipped/markDelivered fires OrderFulfilled), `ShipmentCreated` event, `ShipmentsRelationManager` with Mark Shipped/Delivered row actions, `GET /orders/{n}/shipments` API
 - [x] 3A.4 COD Payment — `cod` payment_method + `pending_collection`/`collected` order statuses, `CodCollectedMail`, `CODCollected` event (Payments namespace), `markCodCollected()` on OrderService (wrapped in transaction, refresh() for fresh state), "Mark Collected" Filament action on OrderResource
+- [x] Security fixes — address ownership scoped in `CheckoutRequest` + `OrderService::checkout()` defense-in-depth; cross-order item injection fixed in `ShipmentService`; VAT computed on discounted subtotal in `InvoiceService`; status allowlist on `overrideOrderStatus()`; constructor injection in `OrderController`; empty CR/VAT guard in `InvoiceService`
+- [x] Tests — 64 tests across `StoreSettingsTest`, `InvoiceTest`, `ShipmentTest`, `CodTest`
 
-**⚠️ Security fixes required before Phase 3A tests (next session START):**
-1. HIGH — `CheckoutRequest`: address ownership not scoped to Auth::id() → use `Rule::exists('customer_addresses','id')->where('user_id', Auth::id())`; add matching guard in `OrderService::checkout()` as defense-in-depth
-2. HIGH — `ShipmentService::createShipment()`: cross-order item injection → scope fetch: `$order->items()->whereIn('id', ...)->get()->keyBy('id')` instead of in-memory collection
-3. MEDIUM — `InvoiceService::generateInvoice()`: VAT computed on gross subtotal, should be on discounted subtotal; `total_fils` should be derived from computed components, not copied from `$order->total_fils`
-4. MEDIUM — `OrderService::overrideOrderStatus()`: no allowlist → add explicit status allowlist before update
-5. LOW — `InvoiceService` + `ShipmentService`: use constructor injection in `OrderController` instead of `app()`
-6. LOW — `InvoiceService::generateInvoice()`: add guard for empty `cr_number`/`vat_number` before generating (throw RuntimeException)
+**Phase 3B — Catalog Expansion** (next)
 
-**Phase 3B–3F** (locked until Phase 3A tests pass)
+- [ ] 3B.1 Product Types — `product_type` enum (`simple`, `configurable`, `bundle`, `downloadable`, `virtual`), bundle tables (`bundle_options`, `bundle_option_products`), downloadable tables (`downloadable_links`, `downloadable_link_purchases`), download token endpoint
+- [ ] 3B.2 Meilisearch — `ProductObserver` → `IndexProductJob`, bilingual index config, `GET /search` API
+
+**Phase 3C — Customer Features** (next, parallel with 3B)
+
+- [ ] 3C.1 Customer Groups — `customer_groups` table, `variant_group_prices`, `product_group_visibility`, group-aware pricing in CartService
+- [ ] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token, move-to-cart, full API
+- [ ] 3C.3 Product Compare — `POST /compare` returns attribute comparison matrix (no DB — frontend state)
+
+**Phase 3D–3F** (locked until 3B + 3C complete)
+
+- 3D: Shipping module (zones, methods, carrier interface), Promotion rule engine, Multi-currency display
+- 3E: RMA/Returns, Loyalty points (earn/redeem), Inventory audit ledger
+- 3F: Complete Filament admin for all modules, Analytics dashboard (KPIs, charts, CSV export)
 
 ---
 

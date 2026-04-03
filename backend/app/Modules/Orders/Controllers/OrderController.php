@@ -26,6 +26,8 @@ class OrderController extends Controller
     public function __construct(
         private readonly OrderService $orderService,
         private readonly CartService $cartService,
+        private readonly InvoiceService $invoiceService,
+        private readonly ShipmentService $shipmentService,
     ) {}
 
     /**
@@ -124,7 +126,7 @@ class OrderController extends Controller
     public function invoice(string $orderNumber): JsonResponse
     {
         $order = $this->orderService->getOrderByNumber($orderNumber, Auth::id());
-        $invoice = app(InvoiceService::class)->getInvoiceForOrder($order);
+        $invoice = $this->invoiceService->getInvoiceForOrder($order);
 
         if (! $invoice) {
             return response()->json(['message' => 'Invoice not yet generated.'], 404);
@@ -142,7 +144,7 @@ class OrderController extends Controller
     public function shipments(string $orderNumber): JsonResponse
     {
         $order = $this->orderService->getOrderByNumber($orderNumber, Auth::id());
-        $shipments = app(ShipmentService::class)->getShipmentsForOrder($order);
+        $shipments = $this->shipmentService->getShipmentsForOrder($order);
 
         return response()->json([
             'data' => ShipmentResource::collection($shipments),

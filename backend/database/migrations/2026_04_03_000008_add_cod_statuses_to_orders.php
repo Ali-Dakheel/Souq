@@ -19,6 +19,8 @@ return new class extends Migration
             DB::statement('ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_order_status_check');
             DB::statement("ALTER TABLE orders ADD CONSTRAINT orders_order_status_check CHECK (order_status IN ('pending','initiated','processing','paid','fulfilled','failed','refunded','cancelled','shipped','delivered','pending_collection','collected'))");
         }
+        // For SQLite, migration 000007 already converted the table to use VARCHAR instead of enum
+        // So no further changes needed here
     }
 
     public function down(): void

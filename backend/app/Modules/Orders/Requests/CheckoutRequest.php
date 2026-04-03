@@ -6,6 +6,7 @@ namespace App\Modules\Orders\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CheckoutRequest extends FormRequest
 {
@@ -17,10 +18,16 @@ class CheckoutRequest extends FormRequest
     /** @return array<string, mixed> */
     public function rules(): array
     {
+        $userId = Auth::id();
+
+        $addressRule = $userId !== null
+            ? Rule::exists('customer_addresses', 'id')->where('user_id', $userId)
+            : 'exists:customer_addresses,id';
+
         return [
             'payment_method' => ['required', 'string', 'in:benefit,benefit_pay_qr,card,apple_pay,cod'],
-            'shipping_address_id' => ['required', 'integer', 'exists:customer_addresses,id'],
-            'billing_address_id' => ['required', 'integer', 'exists:customer_addresses,id'],
+            'shipping_address_id' => ['required', 'integer', $addressRule],
+            'billing_address_id' => ['required', 'integer', $addressRule],
             'guest_email' => [
                 $this->isGuestCheckout() ? 'required' : 'nullable',
                 'email',

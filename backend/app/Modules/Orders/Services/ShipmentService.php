@@ -40,7 +40,9 @@ class ShipmentService
             // Load order items with shipmentItems eager-loaded for computed attributes
             $order->load(['items.shipmentItems']);
 
-            $orderItems = $order->items->keyBy('id');
+            // Scope fetch to this order's items via DB query — prevents cross-order item injection
+            $submittedIds = array_column($items, 'order_item_id');
+            $orderItems = $order->items()->with('shipmentItems')->whereIn('id', $submittedIds)->get()->keyBy('id');
 
             $errors = [];
             foreach ($items as $item) {

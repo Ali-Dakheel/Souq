@@ -52,6 +52,11 @@ class InvoiceService
             // Snapshot legal details
             $crNumber = (string) ($this->settingsService->get('cr_number') ?? '');
             $vatNumber = (string) ($this->settingsService->get('vat_number') ?? '');
+
+            if ($crNumber === '' || $vatNumber === '') {
+                throw new \RuntimeException('Cannot generate invoice: CR number and VAT number must be configured in store settings.');
+            }
+
             $companyNameEn = (string) ($this->settingsService->get('company_name_en') ?? '');
             $companyNameAr = (string) ($this->settingsService->get('company_name_ar') ?? '');
             $companyAddressEn = $this->settingsService->get('company_address_en');
@@ -59,8 +64,8 @@ class InvoiceService
 
             // Calculate totals from order items.
             // Prices are VAT-exclusive: VAT = price × qty × 10%, total = price × qty + VAT.
+            // Invoice-level VAT is computed on the discounted subtotal (coupon reduces taxable base).
             $subtotalFils = 0;
-            $vatFils = 0;
             $lineItems = [];
 
             foreach ($order->items as $item) {
@@ -69,7 +74,6 @@ class InvoiceService
                 $itemTotal = $itemSubtotal + $itemVat;
 
                 $subtotalFils += $itemSubtotal;
-                $vatFils += $itemVat;
 
                 // Resolve bilingual product name
                 $productName = $item->product_name;
@@ -97,13 +101,19 @@ class InvoiceService
                 ];
             }
 
+            // Invoice-level totals: VAT applied to discounted subtotal, total derived from components
+            $discountFils = $order->coupon_discount_fils ?? 0;
+            $discountedSubtotal = $subtotalFils - $discountFils;
+            $vatFils = (int) round($discountedSubtotal * 0.10);
+            $totalFils = $discountedSubtotal + $vatFils;
+
             $invoice = Invoice::create([
                 'order_id' => $order->id,
                 'invoice_number' => $invoiceNumber,
                 'subtotal_fils' => $subtotalFils,
                 'vat_fils' => $vatFils,
-                'discount_fils' => $order->coupon_discount_fils ?? 0,
-                'total_fils' => $order->total_fils,
+                'discount_fils' => $discountFils,
+                'total_fils' => $totalFils,
                 'cr_number' => $crNumber,
                 'vat_number' => $vatNumber,
                 'company_name_en' => $companyNameEn,

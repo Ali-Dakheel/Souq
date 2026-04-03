@@ -11,9 +11,11 @@ class StoreSettingsSeeder extends Seeder
 {
     public function run(): void
     {
+        // Legal identity fields use firstOrCreate — never overwrite live production values on re-seed
+        StoreSetting::firstOrCreate(['key' => 'cr_number'], ['value' => 'CR-00000000', 'group' => 'legal']);
+        StoreSetting::firstOrCreate(['key' => 'vat_number'], ['value' => 'VAT-000000000', 'group' => 'legal']);
+
         $settings = [
-            ['key' => 'cr_number', 'value' => '', 'group' => 'legal'],
-            ['key' => 'vat_number', 'value' => '', 'group' => 'legal'],
             ['key' => 'company_name_en', 'value' => '', 'group' => 'legal'],
             ['key' => 'company_name_ar', 'value' => '', 'group' => 'legal'],
             ['key' => 'company_address_en', 'value' => '', 'group' => 'legal'],

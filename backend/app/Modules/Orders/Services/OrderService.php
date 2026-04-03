@@ -68,6 +68,16 @@ class OrderService
         $shippingAddress = CustomerAddress::findOrFail($shippingAddressId);
         $billingAddress = CustomerAddress::findOrFail($billingAddressId);
 
+        // Defense-in-depth: verify address ownership for authenticated users
+        if ($userId !== null) {
+            if ($shippingAddress->user_id !== $userId) {
+                throw ValidationException::withMessages(['shipping_address_id' => ['This address does not belong to your account.']]);
+            }
+            if ($billingAddress->user_id !== $userId) {
+                throw ValidationException::withMessages(['billing_address_id' => ['This address does not belong to your account.']]);
+            }
+        }
+
         $totals = $this->cartService->calculateTotals($cart);
 
         return DB::transaction(function () use (
@@ -262,11 +272,23 @@ class OrderService
         OrderFulfilled::dispatch($order);
     }
 
+    /** Valid statuses an admin may override an order to. */
+    private const OVERRIDABLE_STATUSES = [
+        'pending', 'initiated', 'paid', 'processing', 'shipped', 'delivered',
+        'fulfilled', 'cancelled', 'refunded', 'pending_collection', 'collected', 'failed',
+    ];
+
     /**
      * Override an order's status with an optional note for audit trail.
+     *
+     * @throws \InvalidArgumentException for unrecognised statuses
      */
     public function overrideOrderStatus(Order $order, string $newStatus, string $note): void
     {
+        if (! in_array($newStatus, self::OVERRIDABLE_STATUSES, true)) {
+            throw new \InvalidArgumentException("Invalid order status: {$newStatus}");
+        }
+
         $oldStatus = $order->order_status;
 
         $order->update(['order_status' => $newStatus]);
