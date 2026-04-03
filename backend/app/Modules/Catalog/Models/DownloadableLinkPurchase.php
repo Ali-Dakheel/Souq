@@ -28,4 +28,11 @@ class DownloadableLinkPurchase extends Model
     {
         return $this->belongsTo(DownloadableLink::class);
     }
+
+    public function order(): BelongsTo
+    {
+        $orderModel = 'App\Modules\Orders\Models\Order';
+
+        return $this->belongsTo($orderModel, 'order_id');
+    }
 }

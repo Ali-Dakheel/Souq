@@ -2,6 +2,7 @@
 
 use App\Modules\Catalog\Controllers\AttributeController;
 use App\Modules\Catalog\Controllers\CategoryController;
+use App\Modules\Catalog\Controllers\DownloadController;
 use App\Modules\Catalog\Controllers\ProductController;
 use App\Modules\Catalog\Controllers\VariantController;
 use Illuminate\Support\Facades\Route;
@@ -49,5 +50,6 @@ Route::prefix('api/v1')->middleware('api')->group(function () {
         Route::post('products/{product}/bundle-options', [ProductController::class, 'storeBundleOption']);
         Route::post('products/{product}/bundle-options/{option}/products', [ProductController::class, 'addBundleOptionProduct']);
         Route::post('products/{product}/downloadable-links', [ProductController::class, 'storeDownloadableLink']);
+        Route::get('downloads/{token}', [DownloadController::class, 'download']);
     });
 });
