@@ -231,9 +231,14 @@ bahrain-ecomm/
 - [x] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token (UUID), `is_public` flag, move-to-cart via CartService, full API (318/318 tests)
 - [x] 3C.3 Product Compare — `POST /compare` accepts up to 4 variant IDs, returns attribute matrix (null-padded), stateless, no DB (318/318 tests)
 
-**Phase 3D–3F** (locked until 3B + 3C complete)
+**Phase 3D — Platform Expansion** (in progress)
 
-- 3D: Shipping module (zones, methods, carrier interface), Promotion rule engine, Multi-currency display
+- [x] 3D.1 Shipping module — `shipping_zones`, `shipping_methods`, `order_shipping` tables, `ShippingCarrierInterface` + `FlatRateCarrier` + `FreeThresholdCarrier` + Aramex/DHL stubs, `ShippingService` (resolveZone, getAvailableRates, attachShippingToOrder, isVirtualCart, validateShippingMethodForCart), `GET /shipping/rates` API, OrderService checkout integration (shipping outside transaction), `OrderShippingResource`, Filament `ShippingZoneResource` + `ShippingMethodsRelationManager` + `OrderShippingRelationManager`, `ShippingSeeder` (BH zone, 2 methods, SA+UAE stubs), 360/360 tests
+- [ ] 3D.2 Promotion rule engine
+- [ ] 3D.3 Multi-currency display
+
+**Phase 3E–3F** (locked)
+
 - 3E: RMA/Returns, Loyalty points (earn/redeem), Inventory audit ledger
 - 3F: Complete Filament admin for all modules, Analytics dashboard (KPIs, charts, CSV export)
 
@@ -263,6 +268,37 @@ docker compose down
 ---
 
 ## 10. Session learnings
+
+### Phase 3D.1 — 2026-04-04
+
+**`return DB::transaction(...)` makes all code after the closing `});` unreachable**
+If you write `return DB::transaction(function () { ... });`, PHP returns from the function immediately with the transaction result. Any code after the closing `});` (like `attachShippingToOrder()`) is dead code — never executed. Always use `$result = DB::transaction(...)` when you need to do work after the transaction, then `return $result` at the end.
+
+**Shipping attachment must happen OUTSIDE the DB transaction**
+`ShippingService::attachShippingToOrder()` creates an `OrderShipping` row. Doing this inside the checkout transaction means: if the transaction rolls back (e.g., inventory fail), you've attached shipping to a non-existent order. Pattern: compute shipping rate before the transaction, run the transaction, then call `attachShippingToOrder()` after `});`.
+
+**`CustomerAddress` has no `country` field — hardcode 'BH' for zone resolution**
+The project is Bahrain-only. `CustomerAddress` stores governorate/city but no ISO country code. `ShippingService::resolveZoneForAddress()` hardcodes `$country = 'BH'` and matches against `ShippingZone.countries` (JSON array). Never try to read a `country` column off the address model.
+
+**`OrderShipping` model needs explicit `protected $table = 'order_shipping'`**
+The migration creates the table as `order_shipping` (singular). Eloquent auto-pluralizes to `order_shippings`. Set `protected $table = 'order_shipping'` explicitly on the model.
+
+**Virtual cart bypass: if ALL items are `product_type = 'virtual'`, skip shipping entirely**
+`ShippingService::isVirtualCart()` returns true only when every cart item has `product_type === 'virtual'`. In `OrderService::checkout()`, virtual carts skip the `shipping_method_id` requirement. Existing test carts with physical products must pass a valid `shipping_method_id` — update existing checkout tests to use `product_type: 'virtual'` to bypass this requirement where shipping isn't the focus.
+
+**Rate computation must happen BEFORE the DB transaction**
+`ShippingService::getAvailableRates()` hits the DB (and Cache) to look up zone and method rates. This must run before `DB::transaction()` so that `delivery_fee_fils` and `total_fils` are correct when the `Order` row is inserted inside the transaction. Calling it inside the transaction adds unnecessary lock time and risks a read-inside-write anti-pattern.
+
+**Shipping rate cache key: `"shipping_rates_{cartId}_{addressId}"`, TTL: 600 seconds**
+Cache key format for `ShippingService::getAvailableRates()`. Both cart ID and address ID are part of the key so different address/cart combos don't collide. TTL is 600 seconds (10 minutes) — balances freshness vs DB load for rate shopping.
+
+**`ShippingMethodsRelationManager` uses `protected static string $relationship = 'methods'`**
+`ShippingZone` has a `methods()` hasMany relationship to `ShippingMethod`. The Filament RelationManager must set `$relationship = 'methods'` (not `'shippingMethods'`). Check the model's actual relationship method name before writing the RelationManager.
+
+**Filament v5: countries JSONB field in form requires explicit dehydrate/hydrate conversion**
+`ShippingZone.countries` is a JSONB array (`['BH', 'SA']`). In a Filament TextInput, the state is a string. Convert bidirectionally:
+- `formatStateUsing(fn ($state) => implode(', ', $state ?? []))` — array to comma string for display
+- `dehydrateStateUsing(fn ($state) => array_filter(array_map('trim', explode(',', $state ?? ''))))` — comma string back to array on save
 
 <!-- /learn command appends here -->
 
