@@ -220,12 +220,12 @@ bahrain-ecomm/
 - [x] Security fixes — address ownership scoped in `CheckoutRequest` + `OrderService::checkout()` defense-in-depth; cross-order item injection fixed in `ShipmentService`; VAT computed on discounted subtotal in `InvoiceService`; status allowlist on `overrideOrderStatus()`; constructor injection in `OrderController`; empty CR/VAT guard in `InvoiceService`
 - [x] Tests — 64 tests across `StoreSettingsTest`, `InvoiceTest`, `ShipmentTest`, `CodTest`
 
-**Phase 3B — Catalog Expansion** (next)
+**Phase 3B — Catalog Expansion** (complete ✅ — 360/360 tests)
 
 - [x] 3B.1 Product Types — `product_type` enum (`simple`, `configurable`, `bundle`, `downloadable`, `virtual`), bundle tables (`bundle_options`, `bundle_option_products`), downloadable tables (`downloadable_links`, `downloadable_link_purchases`), download token endpoint (265/265 tests)
 - [x] 3B.2 Meilisearch — `Searchable` trait on Product, bilingual index config, `GET /search` API, 20 SearchTests (360/360 tests)
 
-**Phase 3C — Customer Features** (next, parallel with 3B)
+**Phase 3C — Customer Features** (complete ✅ — 360/360 tests)
 
 - [x] 3C.1 Customer Groups — `customer_groups` table, `variant_group_prices`, `product_group_visibility`, group-aware pricing in CartService (285/285 tests)
 - [x] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token (UUID), `is_public` flag, move-to-cart via CartService, full API (318/318 tests)
