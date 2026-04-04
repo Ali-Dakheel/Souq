@@ -266,12 +266,13 @@ class CartService
         $promotionDiscountFils = 0;
         $user = $cart->user_id ? User::find($cart->user_id) : null;
         $applicableRules = $this->promotionService->getApplicableRules($cart, $user);
+        $postCouponSubtotal = max(0, $subtotal - $discountFils);
         foreach ($applicableRules as $rule) {
-            $result = $this->promotionService->calculateActionDiscount($rule, $cart);
+            $result = $this->promotionService->calculateActionDiscount($rule, $cart, $postCouponSubtotal);
             $promotionDiscountFils += $result['promotion_discount_fils'];
         }
-        // Cap promotion discount so combined discount doesn't exceed subtotal
-        $promotionDiscountFils = min($promotionDiscountFils, max(0, $subtotal - $discountFils));
+        // Cap promotion discount so combined discount doesn't exceed post-coupon subtotal
+        $promotionDiscountFils = min($promotionDiscountFils, $postCouponSubtotal);
 
         $taxable = $subtotal - $discountFils - $promotionDiscountFils;
         $vatRate = config('cart.vat_rate', 0.10);

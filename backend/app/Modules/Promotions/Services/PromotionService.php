@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Modules\Cart\Models\Cart;
 use App\Modules\Promotions\Models\PromotionRule;
 use App\Modules\Promotions\Models\PromotionUsage;
-use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 class PromotionService
 {
@@ -17,14 +17,14 @@ class PromotionService
      * ordered by priority (ascending = applied first).
      * Exclusive rule stops further rule application.
      *
-     * @return Collection<int, PromotionRule>
+     * @return EloquentCollection<int, PromotionRule>
      */
-    public function getApplicableRules(Cart $cart, ?User $user): Collection
+    public function getApplicableRules(Cart $cart, ?User $user): EloquentCollection
     {
         // Load cart items with variant and product relationships to avoid N+1
         $cart->loadMissing('items.variant.product');
 
-        $applicable = new Collection;
+        $applicable = new EloquentCollection;
         $rules = PromotionRule::active()
             ->with(['conditions', 'actions'])
             ->orderBy('priority', 'asc')
@@ -184,9 +184,9 @@ class PromotionService
      *
      * @return array{promotion_discount_fils: int, free_shipping: bool}
      */
-    public function calculateActionDiscount(PromotionRule $rule, Cart $cart): array
+    public function calculateActionDiscount(PromotionRule $rule, Cart $cart, ?int $effectiveSubtotal = null): array
     {
-        $cartSubtotal = $cart->items->sum('line_total_fils');
+        $cartSubtotal = $effectiveSubtotal ?? $cart->items->sum('line_total_fils');
         $totalDiscount = 0;
         $freeShipping = false;
 
@@ -231,7 +231,7 @@ class PromotionService
         }
 
         // Find the item with the lowest line_total_fils
-        $lowestItem = $cart->items->minBy('line_total_fils');
+        $lowestItem = $cart->items->sortBy('line_total_fils')->first();
 
         if ($lowestItem === null) {
             return 0;

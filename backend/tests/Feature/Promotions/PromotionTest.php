@@ -958,11 +958,14 @@ class PromotionTest extends TestCase
         // Create a coupon for additional discount
         $coupon = Coupon::create([
             'code' => 'TESTCODE',
+            'name' => ['en' => 'Test Coupon', 'ar' => 'قسيمة اختبار'],
             'discount_type' => 'percentage',
             'discount_value' => 5,
             'minimum_order_amount_fils' => 5000,
             'is_active' => true,
             'max_uses_global' => 100,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addYear(),
         ]);
 
         $cart->update(['coupon_code' => $coupon->code]);

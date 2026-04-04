@@ -23,18 +23,18 @@ class PromotionController extends Controller
     {
         $user = $request->user();
 
-        // Get or resolve user's active cart
-        $cart = Cart::where('user_id', $user->id)->where('status', 'active')->first();
+        // Get user's cart (Cart has no status column — one cart per user)
+        $cart = Cart::where('user_id', $user->id)->first();
 
-        // If no cart, return empty array
+        // If no cart, return empty data array
         if ($cart === null) {
-            return response()->json([]);
+            return response()->json(['data' => []]);
         }
 
         // Get applicable rules
         $rules = $this->promotionService->getApplicableRules($cart, $user);
 
         // Return as resource
-        return response()->json(PromotionRuleResource::collection($rules));
+        return PromotionRuleResource::collection($rules)->toResponse($request);
     }
 }
