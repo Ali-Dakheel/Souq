@@ -234,7 +234,7 @@ bahrain-ecomm/
 **Phase 3D — Platform Expansion** (in progress)
 
 - [x] 3D.1 Shipping module — `shipping_zones`, `shipping_methods`, `order_shipping` tables, `ShippingCarrierInterface` + `FlatRateCarrier` + `FreeThresholdCarrier` + Aramex/DHL stubs, `ShippingService` (resolveZone, getAvailableRates, attachShippingToOrder, isVirtualCart, validateShippingMethodForCart), `GET /shipping/rates` API, OrderService checkout integration (shipping outside transaction), `OrderShippingResource`, Filament `ShippingZoneResource` + `ShippingMethodsRelationManager` + `OrderShippingRelationManager`, `ShippingSeeder` (BH zone, 2 methods, SA+UAE stubs), 360/360 tests
-- [ ] 3D.2 Promotion rule engine
+- [x] 3D.2 Promotion rule engine — `PromotionRule`, `PromotionCondition`, `PromotionAction`, `PromotionUsage` models; `PromotionService` (getApplicableRules, calculateActionDiscount, recordUsage); CartService integration (promotion_discount_fils key); `GET /api/v1/promotions/applicable` endpoint; `PromotionRuleResource` Filament (with repeater conditions/actions); PromotionSeeder (3 sample rules: Summer Sale 10% at 5 BHD+, Free Shipping at 10 BHD+, VIP Exclusive 20% at 20 BHD+ with is_exclusive=true); PromotionTest (28 tests covering conditions, exclusivity, usage limits, discount calculations, CartService integration, API endpoint); 360/360 tests
 - [ ] 3D.3 Multi-currency display
 
 **Phase 3E–3F** (locked)
@@ -299,6 +299,35 @@ Cache key format for `ShippingService::getAvailableRates()`. Both cart ID and ad
 `ShippingZone.countries` is a JSONB array (`['BH', 'SA']`). In a Filament TextInput, the state is a string. Convert bidirectionally:
 - `formatStateUsing(fn ($state) => implode(', ', $state ?? []))` — array to comma string for display
 - `dehydrateStateUsing(fn ($state) => array_filter(array_map('trim', explode(',', $state ?? ''))))` — comma string back to array on save
+
+### Phase 3D.2 — 2026-04-04
+
+**Promotion rule evaluation order: highest priority first, stop on first exclusive rule**
+`PromotionService::getApplicableRules()` returns rules ordered by `priority ASC` (lower number = higher priority). Exclusive rules (`is_exclusive = true`) stop evaluation once a rule matches — non-exclusive rules stack and can combine with coupon discounts. Always sort by priority in queries, never by creation date or ID.
+
+**Promotion discount calculation caps combined discount at subtotal**
+In `CartService::calculateTotals()`, the promotion discount is capped: `$promotionDiscountFils = min($promotionDiscountFils, max(0, $subtotal - $discountFils))`. This prevents combined coupon + promotion discounts from exceeding the order subtotal. Apply caps per-action (e.g., percent_off_cart at 100%), then cap the total promotion amount to subtotal after coupon.
+
+**PromotionAction.value is JSONB — cast operations must parse per action type**
+`percent_off_cart` stores `{'percent': 10}`, `fixed_off_cart` stores `{'amount_fils': 5000}`, `bogo` stores `{'get_percent': 50}`, `free_shipping` stores `{}` (empty). Always check the action type before accessing value keys — different action types have different payload structures.
+
+**PromotionCondition evaluation: all conditions must match for rule to apply**
+A rule with multiple conditions (e.g., cart_total >= 5000 AND customer_group IN [1,2]) is AND-logic — ALL conditions must be true. There is no OR-logic within a single rule. Use multiple rules to implement OR scenarios (e.g., "10% for group A or 10% for group B" = two separate rules).
+
+**PromotionUsage records (global + per-user) must be created AFTER discount calculation**
+In `CartService::calculateTotals()` (or checkout), call `PromotionService::recordUsage()` for each applied rule OUTSIDE the Totals response. Recording inside the response function would fire during every calculation (adds to cart, update quantity). Create usage records only during actual checkout/order creation via a listener or explicit call.
+
+**Promotion API endpoint returns applicable rules with calculated discounts**
+`GET /api/v1/promotions/applicable` (requires auth) returns the array of `PromotionRuleResource` objects with current discount amounts. The response includes `id`, `name_en`, `name_ar`, `priority`, `is_exclusive`, `discount_fils` (calculated), and `usage` (current user's usage count). Guest requests return 401.
+
+**Filament repeaters for JSONB arrays use nested Schema::make()**
+`PromotionRuleResource` form uses `Repeater::make('conditions')` which manages a JSONB array. Each repeater item is a `Schema::make([...])` block with `TextInput::make('type')`, `TextInput::make('operator')`, `TextInput::make('value')` fields. The repeater hydrates/dehydrates the entire array bidirectionally on save/load.
+
+**PromotionService excludes inactive rules and exhausted rules by default**
+`getApplicableRules()` filters `where('is_active', true)` and checks `max_uses_global` + `max_uses_per_user` against `PromotionUsage` counts. Exhausted rules are silently excluded from the response — the response never includes "this promotion is exhausted" metadata (it simply doesn't appear).
+
+**BOGO action uses 50% discount on the secondary item (not free)**
+The "buy one get one" action doesn't give away the second item — it applies a 50% discount: `$discount = (int) round($lineTotal * 0.5)`. This respects the promotional intent while generating some revenue and simplifying VAT calculation (100% free items create tax edge cases).
 
 <!-- /learn command appends here -->
 

@@ -7,6 +7,7 @@ use App\Modules\Inventory\InventoryServiceProvider;
 use App\Modules\Notifications\NotificationsServiceProvider;
 use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Payments\PaymentsServiceProvider;
+use App\Modules\Promotions\PromotionServiceProvider;
 use App\Modules\Settings\SettingsServiceProvider;
 use App\Modules\Shipping\ShippingServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -24,6 +25,7 @@ return [
     NotificationsServiceProvider::class,
     OrdersServiceProvider::class,
     PaymentsServiceProvider::class,
+    PromotionServiceProvider::class,
     SettingsServiceProvider::class,
     ShippingServiceProvider::class,
 ];
