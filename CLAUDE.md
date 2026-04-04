@@ -231,10 +231,10 @@ bahrain-ecomm/
 - [x] 3C.2 Wishlist — `wishlists` + `wishlist_items` tables, shareable token (UUID), `is_public` flag, move-to-cart via CartService, full API (318/318 tests)
 - [x] 3C.3 Product Compare — `POST /compare` accepts up to 4 variant IDs, returns attribute matrix (null-padded), stateless, no DB (318/318 tests)
 
-**Phase 3D — Platform Expansion** (in progress)
+**Phase 3D — Platform Expansion** (in progress — 3D.1 + 3D.2 complete)
 
 - [x] 3D.1 Shipping module — `shipping_zones`, `shipping_methods`, `order_shipping` tables, `ShippingCarrierInterface` + `FlatRateCarrier` + `FreeThresholdCarrier` + Aramex/DHL stubs, `ShippingService` (resolveZone, getAvailableRates, attachShippingToOrder, isVirtualCart, validateShippingMethodForCart), `GET /shipping/rates` API, OrderService checkout integration (shipping outside transaction), `OrderShippingResource`, Filament `ShippingZoneResource` + `ShippingMethodsRelationManager` + `OrderShippingRelationManager`, `ShippingSeeder` (BH zone, 2 methods, SA+UAE stubs), 360/360 tests
-- [x] 3D.2 Promotion rule engine — `PromotionRule`, `PromotionCondition`, `PromotionAction`, `PromotionUsage` models; `PromotionService` (getApplicableRules, calculateActionDiscount, recordUsage); CartService integration (promotion_discount_fils key); `GET /api/v1/promotions/applicable` endpoint; `PromotionRuleResource` Filament (with repeater conditions/actions); PromotionSeeder (3 sample rules: Summer Sale 10% at 5 BHD+, Free Shipping at 10 BHD+, VIP Exclusive 20% at 20 BHD+ with is_exclusive=true); PromotionTest (28 tests covering conditions, exclusivity, usage limits, discount calculations, CartService integration, API endpoint); 360/360 tests
+- [x] 3D.2 Promotion rule engine — `PromotionRule`, `PromotionCondition`, `PromotionAction`, `PromotionUsage` models; `PromotionService` (getApplicableRules, calculateActionDiscount, recordUsage); CartService integration (promotion_discount_fils key, post-coupon subtotal base); `GET /api/v1/promotions/applicable` endpoint; `PromotionRuleResource` Filament (with repeater conditions/actions); PromotionSeeder (3 sample rules: Summer Sale 10% at 5 BHD+, Free Shipping at 10 BHD+, VIP Exclusive 20% at 20 BHD+ with is_exclusive=true); PromotionTest (29 tests covering conditions, exclusivity, usage limits, discount calculations, CartService integration, coupon+promotion stacking, API endpoint); 389/389 tests
 - [ ] 3D.3 Multi-currency display
 
 **Phase 3E–3F** (locked)
@@ -305,8 +305,11 @@ Cache key format for `ShippingService::getAvailableRates()`. Both cart ID and ad
 **Promotion rule evaluation order: highest priority first, stop on first exclusive rule**
 `PromotionService::getApplicableRules()` returns rules ordered by `priority ASC` (lower number = higher priority). Exclusive rules (`is_exclusive = true`) stop evaluation once a rule matches — non-exclusive rules stack and can combine with coupon discounts. Always sort by priority in queries, never by creation date or ID.
 
-**Promotion discount calculation caps combined discount at subtotal**
-In `CartService::calculateTotals()`, the promotion discount is capped: `$promotionDiscountFils = min($promotionDiscountFils, max(0, $subtotal - $discountFils))`. This prevents combined coupon + promotion discounts from exceeding the order subtotal. Apply caps per-action (e.g., percent_off_cart at 100%), then cap the total promotion amount to subtotal after coupon.
+**Promotion discount must be calculated on the post-coupon subtotal, not raw subtotal**
+`calculateActionDiscount()` accepts an optional `$effectiveSubtotal` parameter. In `CartService`, pass `$postCouponSubtotal = max(0, $subtotal - $discountFils)` as the base. This ensures a 10% promotion on a 10,000-fils cart with a 500-fils coupon yields 950 fils (10% × 9,500), not 1,000 fils (10% × 10,000). Without this, the cap `min(rawDiscount, postCouponSubtotal)` would clip to 1,000 when there's a large enough post-coupon base, making the cap irrelevant in most cases but still wrong semantically.
+
+**Promotion discount calculation caps combined discount at post-coupon subtotal**
+In `CartService::calculateTotals()`, promotion discount is capped: `$promotionDiscountFils = min($promotionDiscountFils, $postCouponSubtotal)`. This prevents stacked promotions from exceeding the remaining subtotal after coupon. Apply caps per-action (e.g., `fixed_off_cart` capped at subtotal), then cap total promotion amount to post-coupon subtotal.
 
 **PromotionAction.value is JSONB — cast operations must parse per action type**
 `percent_off_cart` stores `{'percent': 10}`, `fixed_off_cart` stores `{'amount_fils': 5000}`, `bogo` stores `{'get_percent': 50}`, `free_shipping` stores `{}` (empty). Always check the action type before accessing value keys — different action types have different payload structures.
