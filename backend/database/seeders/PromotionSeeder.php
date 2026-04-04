@@ -133,7 +133,7 @@ class PromotionSeeder extends Seeder
         PromotionAction::create([
             'promotion_rule_id' => $rule5->id,
             'type' => 'bogo',
-            'value' => ['get_percent' => 50],
+            'value' => [],
         ]);
     }
 }
