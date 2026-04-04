@@ -788,6 +788,40 @@ class PromotionTest extends TestCase
         $this->assertEquals(2500, $result['promotion_discount_fils']);
     }
 
+    public function test_percent_off_items_applies_percentage_to_subtotal(): void
+    {
+        $user = User::factory()->create();
+        $variant = $this->makeVariant(10000); // 10 BHD
+        $cart = $this->makeCartWithItem($user, $variant, 1); // 10000 fils subtotal
+
+        $rule = PromotionRule::create([
+            'name_en' => 'Percent Off Items',
+            'name_ar' => 'نسبة خصم على المنتجات',
+            'is_active' => true,
+            'priority' => 10,
+        ]);
+
+        // Always apply condition
+        PromotionCondition::create([
+            'promotion_rule_id' => $rule->id,
+            'type' => 'cart_total',
+            'operator' => 'gte',
+            'value' => 0,
+        ]);
+
+        PromotionAction::create([
+            'promotion_rule_id' => $rule->id,
+            'type' => 'percent_off_items',
+            'value' => ['percent' => 15],
+        ]);
+
+        $result = $this->promotionService->calculateActionDiscount($rule, $cart);
+
+        // 15% of 10000 = 1500 fils
+        $this->assertEquals(1500, $result['promotion_discount_fils']);
+        $this->assertFalse($result['free_shipping']);
+    }
+
     public function test_multiple_actions_on_one_rule_stack_correctly(): void
     {
         $user = User::factory()->create();

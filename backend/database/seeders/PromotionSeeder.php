@@ -87,5 +87,53 @@ class PromotionSeeder extends Seeder
             'type' => 'percent_off_cart',
             'value' => ['percent' => 20],
         ]);
+
+        // --- Rule 4: Fixed Off on Orders 8 BHD+ ---
+        // Condition: cart_total >= 8000 fils (8 BHD minimum)
+        // Action: 500 fils off
+        $rule4 = PromotionRule::create([
+            'name_en' => '500 fils off orders 8 BHD+',
+            'name_ar' => '500 فلس خصم على الطلبات فوق 8 دنانير',
+            'is_active' => true,
+            'priority' => 30,
+            'is_exclusive' => false,
+        ]);
+
+        PromotionCondition::create([
+            'promotion_rule_id' => $rule4->id,
+            'type' => 'cart_total',
+            'operator' => 'gte',
+            'value' => 8000,
+        ]);
+
+        PromotionAction::create([
+            'promotion_rule_id' => $rule4->id,
+            'type' => 'fixed_off_cart',
+            'value' => ['amount_fils' => 500],
+        ]);
+
+        // --- Rule 5: Buy 2+ Get 50% Off Cheapest ---
+        // Condition: item_qty >= 2
+        // Action: bogo (50% off lowest price item)
+        $rule5 = PromotionRule::create([
+            'name_en' => 'Buy 2+ get 50% off cheapest',
+            'name_ar' => 'اشتري 2 أو أكثر احصل على 50% خصم على الأرخص',
+            'is_active' => true,
+            'priority' => 40,
+            'is_exclusive' => false,
+        ]);
+
+        PromotionCondition::create([
+            'promotion_rule_id' => $rule5->id,
+            'type' => 'item_qty',
+            'operator' => 'gte',
+            'value' => 2,
+        ]);
+
+        PromotionAction::create([
+            'promotion_rule_id' => $rule5->id,
+            'type' => 'bogo',
+            'value' => ['get_percent' => 50],
+        ]);
     }
 }
