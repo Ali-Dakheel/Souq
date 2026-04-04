@@ -195,9 +195,11 @@ class PromotionService
             $value = $action->value;
 
             $discount = match ($type) {
-                'percent_off_cart' => (int) round($cartSubtotal * ($value['percent'] / 100)),
-                'fixed_off_cart' => min((int) $value['amount_fils'], $cartSubtotal),
-                'percent_off_items' => (int) round($cartSubtotal * ($value['percent'] / 100)),
+                'percent_off_cart' => isset($value['percent']) ? (int) round($cartSubtotal * ($value['percent'] / 100)) : 0,
+                'fixed_off_cart' => isset($value['amount_fils']) ? min((int) $value['amount_fils'], $cartSubtotal) : 0,
+                // percent_off_items: applies percentage discount to the full cart subtotal.
+                // Future enhancement: could be scoped to specific items matching rule conditions.
+                'percent_off_items' => isset($value['percent']) ? (int) round($cartSubtotal * ($value['percent'] / 100)) : 0,
                 'bogo' => $this->calculateBogoDiscount($cart),
                 'free_shipping' => 0, // free_shipping has no discount value
                 default => 0,

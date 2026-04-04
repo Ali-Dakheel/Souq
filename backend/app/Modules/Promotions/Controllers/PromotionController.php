@@ -24,7 +24,7 @@ class PromotionController extends Controller
         $user = $request->user();
 
         // Get or resolve user's active cart
-        $cart = Cart::where('user_id', $user->id)->first();
+        $cart = Cart::where('user_id', $user->id)->where('status', 'active')->first();
 
         // If no cart, return empty array
         if ($cart === null) {
