@@ -178,7 +178,7 @@ class CartController extends Controller
         );
     }
 
-    /** @param array{subtotal_fils: int, discount_fils: int, vat_fils: int, total_fils: int} $totals */
+    /** @param array{subtotal_fils: int, discount_fils: int, promotion_discount_fils: int, vat_fils: int, total_fils: int} $totals */
     private function cartSummary(Cart $cart, array $totals): array
     {
         return [
@@ -186,6 +186,7 @@ class CartController extends Controller
             'subtotal_fils' => $totals['subtotal_fils'],
             'coupon_code' => $cart->coupon_code,
             'discount_fils' => $totals['discount_fils'],
+            'promotion_discount_fils' => $totals['promotion_discount_fils'],
             'vat_fils' => $totals['vat_fils'],
             'total_fils' => $totals['total_fils'],
         ];

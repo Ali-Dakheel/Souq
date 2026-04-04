@@ -17,6 +17,7 @@ use App\Modules\Cart\Models\CartItem;
 use App\Modules\Cart\Models\Coupon;
 use App\Modules\Catalog\Models\Variant;
 use App\Modules\Customers\Services\CustomerGroupService;
+use App\Modules\Promotions\Services\PromotionService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,7 @@ class CartService
     public function __construct(
         private readonly CouponService $couponService,
         private readonly CustomerGroupService $customerGroupService,
+        private readonly PromotionService $promotionService,
     ) {}
 
     /**
@@ -238,9 +240,9 @@ class CartService
     }
 
     /**
-     * Calculate subtotal, discount, VAT (10%), and total — all in fils.
+     * Calculate subtotal, discount, VAT (10%), promotion discount, and total — all in fils.
      *
-     * @return array{subtotal_fils: int, discount_fils: int, vat_fils: int, total_fils: int}
+     * @return array{subtotal_fils: int, discount_fils: int, promotion_discount_fils: int, vat_fils: int, total_fils: int}
      */
     public function calculateTotals(Cart $cart): array
     {
@@ -260,7 +262,18 @@ class CartService
             }
         }
 
-        $taxable = $subtotal - $discountFils;
+        // Apply promotion discounts (auto-applied, no code needed)
+        $promotionDiscountFils = 0;
+        $user = $cart->user_id ? User::find($cart->user_id) : null;
+        $applicableRules = $this->promotionService->getApplicableRules($cart, $user);
+        foreach ($applicableRules as $rule) {
+            $result = $this->promotionService->calculateActionDiscount($rule, $cart);
+            $promotionDiscountFils += $result['promotion_discount_fils'];
+        }
+        // Cap promotion discount so combined discount doesn't exceed subtotal
+        $promotionDiscountFils = min($promotionDiscountFils, max(0, $subtotal - $discountFils));
+
+        $taxable = $subtotal - $discountFils - $promotionDiscountFils;
         $vatRate = config('cart.vat_rate', 0.10);
         $vatFils = (int) round($taxable * $vatRate);
         $total = $taxable + $vatFils;
@@ -268,6 +281,7 @@ class CartService
         return [
             'subtotal_fils' => $subtotal,
             'discount_fils' => $discountFils,
+            'promotion_discount_fils' => $promotionDiscountFils,
             'vat_fils' => $vatFils,
             'total_fils' => $total,
         ];

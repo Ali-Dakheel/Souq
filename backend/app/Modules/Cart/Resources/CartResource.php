@@ -36,6 +36,7 @@ class CartResource extends JsonResource
             ]),
             'subtotal_fils' => $this->totals['subtotal_fils'] ?? 0,
             'discount_fils' => $this->totals['discount_fils'] ?? 0,
+            'promotion_discount_fils' => $this->totals['promotion_discount_fils'] ?? 0,
             'vat_fils' => $this->totals['vat_fils'] ?? 0,
             'total_fils' => $this->totals['total_fils'] ?? 0,
             'expires_at' => $this->expires_at?->toIso8601String(),
