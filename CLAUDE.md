@@ -223,7 +223,7 @@ bahrain-ecomm/
 **Phase 3B — Catalog Expansion** (next)
 
 - [x] 3B.1 Product Types — `product_type` enum (`simple`, `configurable`, `bundle`, `downloadable`, `virtual`), bundle tables (`bundle_options`, `bundle_option_products`), downloadable tables (`downloadable_links`, `downloadable_link_purchases`), download token endpoint (265/265 tests)
-- [ ] 3B.2 Meilisearch — `ProductObserver` → `IndexProductJob`, bilingual index config, `GET /search` API
+- [x] 3B.2 Meilisearch — `Searchable` trait on Product, bilingual index config, `GET /search` API, 20 SearchTests (360/360 tests)
 
 **Phase 3C — Customer Features** (next, parallel with 3B)
 
