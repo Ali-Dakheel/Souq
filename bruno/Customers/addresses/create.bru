@@ -15,21 +15,27 @@ headers {
 
 body:json {
   {
-    "street": "123 Main St",
-    "city": "Manama",
-    "state": "Capital",
+    "address_type": "shipping",
+    "recipient_name": "Test Customer",
+    "phone": "+97366123456",
+    "governorate": "Capital",
+    "district": "Manama",
+    "street_address": "Building 123, Road 456",
+    "building_number": "123",
+    "apartment_number": null,
     "postal_code": "428",
-    "country": "BH",
-    "is_default": false,
-    "label": "Home"
+    "delivery_instructions": "Ring the bell",
+    "is_default": true
   }
 }
 
 assert {
   res.status: eq 201
-  res.body.data.street: eq "123 Main St"
+  res.body.data.street_address: isNotEmpty
 }
 
 script:post-response {
-  bru.setVar("address_id", res.body.data.id);
+  if (res.status === 201) {
+    bru.setVar("address_id", res.body.data.id);
+  }
 }

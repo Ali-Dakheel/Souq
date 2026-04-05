@@ -24,5 +24,7 @@ assert {
 }
 
 script:post-response {
-  bru.setVar("wishlist_variant_id", res.body.data.variant_id);
+  if (res.status === 201) {
+    bru.setVar("wishlist_variant_id", req.body.variant_id);
+  }
 }

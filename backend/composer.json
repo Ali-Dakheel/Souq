@@ -10,7 +10,7 @@
         "filament/filament": "^4.9",
         "http-interop/http-factory-guzzle": "^1.2",
         "laravel/framework": "^13.0",
-        "laravel/sanctum": "^4.3",
+        "laravel/sanctum": "^4.0",
         "laravel/scout": "^11.1",
         "laravel/tinker": "^3.0",
         "meilisearch/meilisearch-php": "^1.16",

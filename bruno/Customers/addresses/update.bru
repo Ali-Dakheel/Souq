@@ -15,16 +15,17 @@ headers {
 
 body:json {
   {
-    "street": "456 New Street",
-    "city": "Riffa",
-    "state": "Southern",
-    "postal_code": "500",
-    "country": "BH",
-    "label": "Office"
+    "address_type": "shipping",
+    "recipient_name": "Updated Name",
+    "phone": "+97366999888",
+    "governorate": "Southern",
+    "district": "Riffa",
+    "street_address": "Building 999, Road 111",
+    "is_default": false
   }
 }
 
 assert {
   res.status: eq 200
-  res.body.data.street: eq "456 New Street"
+  res.body.data.recipient_name: eq "Updated Name"
 }

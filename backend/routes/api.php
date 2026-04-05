@@ -1,5 +1,8 @@
 <?php
 
-// Module routes are registered via each module's ServiceProvider.
-// This file exists so Laravel registers the 'api' middleware group
-// (Sanctum, throttle:api, SubstituteBindings) for all api/* routes.
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');

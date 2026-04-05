@@ -55,13 +55,8 @@ class AuthService
     }
 
     /**
-     * Authenticate a customer via session guard.
-     * If a guest_session_id is provided, CartMerged is dispatched so the Cart
-     * module can merge the guest cart into the authenticated user's cart.
+     * Authenticate a customer and issue a Sanctum API token.
      *
-     * @throws AuthenticationException
-     */
-    /**
      * @return array{user: User, token: string}
      * @throws AuthenticationException
      */
@@ -75,24 +70,13 @@ class AuthService
 
         $user->load('profile');
 
-        // Revoke old tokens to keep things clean (optional but good practice)
-        $user->tokens()->delete();
-
-        $token = $user->createToken('api')->plainTextToken;
+        $token = $user->createToken('api-token')->plainTextToken;
 
         if ($guestSessionId) {
             $this->dispatchCartMergeIfNeeded($user, $guestSessionId);
         }
 
         return ['user' => $user, 'token' => $token];
-    }
-
-    /**
-     * Revoke the current session.
-     */
-    public function logout(): void
-    {
-        Auth::guard('web')->logout();
     }
 
     /**
