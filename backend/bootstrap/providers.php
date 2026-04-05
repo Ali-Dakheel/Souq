@@ -4,10 +4,12 @@ use App\Modules\Cart\CartServiceProvider;
 use App\Modules\Catalog\CatalogServiceProvider;
 use App\Modules\Customers\CustomersServiceProvider;
 use App\Modules\Inventory\InventoryServiceProvider;
+use App\Modules\Loyalty\LoyaltyServiceProvider;
 use App\Modules\Notifications\NotificationsServiceProvider;
 use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Payments\PaymentsServiceProvider;
 use App\Modules\Promotions\PromotionServiceProvider;
+use App\Modules\Returns\ReturnsServiceProvider;
 use App\Modules\Settings\SettingsServiceProvider;
 use App\Modules\Shipping\ShippingServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -26,6 +28,8 @@ return [
     OrdersServiceProvider::class,
     PaymentsServiceProvider::class,
     PromotionServiceProvider::class,
+    LoyaltyServiceProvider::class,
+    ReturnsServiceProvider::class,
     SettingsServiceProvider::class,
     ShippingServiceProvider::class,
 ];

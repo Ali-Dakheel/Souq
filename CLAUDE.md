@@ -174,16 +174,21 @@ bahrain-ecomm/
 
 ## 8. Current build phase
 
-**Phases 1 + 2 + 3A + 3B + 3C — complete ✅** (389/389 tests)
+**Phases 1 + 2 + 3A + 3B + 3C + 3D — complete ✅** (428/428 tests)
 
-**Phase 3D — Platform Expansion** (in progress — 3D.1 + 3D.2 + 3D.3 complete)
+**Phase 3D — Platform Expansion ✅**
 
 - [x] 3D.1 Shipping module — zones, methods, carriers (FlatRate, FreeThreshold, Aramex/DHL stubs), `ShippingService`, `GET /shipping/rates`, checkout integration, Filament admin
 - [x] 3D.2 Promotion rule engine — `PromotionRule/Condition/Action/Usage`, `PromotionService`, CartService integration, `GET /api/v1/promotions/applicable`, Filament admin, 29 tests
 - [x] 3D.3 Multi-currency display — `currencies` table, `CurrencyService` (getActiveCurrencies cached 1h, getRate, convert fils→float), `GET /api/v1/currencies` public, Filament `CurrencyResource` CRUD + Refresh Rates stub, `useCurrencyStore` Zustand (persisted selectedCode), `useCurrencies()` TanStack Query, `CurrencySelector` + `PriceDisplay` components (403/403 tests)
 
-**Phase 3E–3F** (locked)
-- 3E: RMA/Returns, Loyalty points, Inventory audit ledger
+**Phase 3E — Customer Operations ✅** (428/428 tests)
+
+- [x] 3E.1 Returns/RMA — `ReturnRequest`/`ReturnRequestItem` models, `ReturnService` (createRequest, approveReturn, rejectReturn, completeReturn), RMA sequential number (`RMA-YYYY-NNNNNN`), 4 events (ReturnRequested/Approved/Rejected/Completed), `POST/GET /api/v1/orders/{order}/returns`, inventory restock on complete, 15 tests
+- [x] 3E.2 Loyalty points — `LoyaltyAccount`/`LoyaltyConfig`/`LoyaltyTransaction` models, `LoyaltyService` (earnPoints, redeemPoints, creditStoreCredit, manualAdjust, getBalance, getHistory), `EarnPointsJob` (ShouldBeUnique, dispatched on PaymentCaptured), config keys: `points_per_fil`, `fils_per_point`, `max_redeem_percent`, `points_expiry_days`, 16 tests
+- [x] 3E.3 Inventory audit ledger — `InventoryMovement` model, `InventoryMovementService::record()`, listeners on OrderPlaced (reservation) + OrderCancelled (release), 8 tests
+
+**Phase 3F** (next)
 - 3F: Complete Filament admin, Analytics dashboard (KPIs, charts, CSV export)
 
 **Infrastructure pending:** Coolify deploy pipeline — requires `COOLIFY_WEBHOOK_TOKEN` + `COOLIFY_WEBHOOK_URL` secrets in GitHub repo settings.
