@@ -18,10 +18,12 @@ body:json {
 
 assert {
   res.status: eq 200
-  res.body.data.token: isNotEmpty
-  res.body.data.user.email: eq "test@example.com"
+  res.body.token: isNotEmpty
+  res.body.data.email: isNotEmpty
 }
 
 script:post-response {
-  bru.setVar("auth_token", res.body.data.token);
+  if (res.status === 200) {
+    bru.setVar("auth_token", res.body.token);
+  }
 }

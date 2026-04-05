@@ -61,21 +61,30 @@ class AuthService
      *
      * @throws AuthenticationException
      */
-    public function login(string $email, string $password, ?string $guestSessionId = null): User
+    /**
+     * @return array{user: User, token: string}
+     * @throws AuthenticationException
+     */
+    public function login(string $email, string $password, ?string $guestSessionId = null): array
     {
-        if (! Auth::attempt(['email' => $email, 'password' => $password])) {
+        $user = User::where('email', $email)->first();
+
+        if (! $user || ! Hash::check($password, $user->password)) {
             throw new AuthenticationException('Invalid credentials.');
         }
 
-        /** @var User $user */
-        $user = Auth::user();
         $user->load('profile');
+
+        // Revoke old tokens to keep things clean (optional but good practice)
+        $user->tokens()->delete();
+
+        $token = $user->createToken('api')->plainTextToken;
 
         if ($guestSessionId) {
             $this->dispatchCartMergeIfNeeded($user, $guestSessionId);
         }
 
-        return $user;
+        return ['user' => $user, 'token' => $token];
     }
 
     /**

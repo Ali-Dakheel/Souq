@@ -37,20 +37,20 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $user = $this->authService->login(
+        ['user' => $user, 'token' => $token] = $this->authService->login(
             $request->string('email')->toString(),
             $request->string('password')->toString(),
             $request->string('guest_session_id')->toString() ?: null,
         );
 
         return (new UserResource($user))
-            ->additional(['message' => 'Login successful.'])
+            ->additional(['message' => 'Login successful.', 'token' => $token])
             ->response();
     }
 
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout successful.']);
     }
