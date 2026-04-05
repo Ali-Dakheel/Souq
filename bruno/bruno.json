@@ -1,5 +1,7 @@
 {
   "version": "1",
   "name": "Souq Ecommerce API",
-  "uid": "souq-api-tests"
+  "uid": "souq-api-tests",
+  "root": true,
+  "pathname": "."
 }
