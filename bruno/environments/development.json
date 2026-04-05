@@ -1,29 +1,25 @@
 {
   "name": "development",
-  "values": [
+  "variables": [
     {
-      "key": "BASE_URL",
+      "name": "BASE_URL",
       "value": "http://localhost:8000",
-      "enabled": true,
-      "type": "text"
+      "enabled": true
     },
     {
-      "key": "auth_token",
+      "name": "auth_token",
       "value": "",
-      "enabled": true,
-      "type": "text"
+      "enabled": true
     },
     {
-      "key": "address_id",
+      "name": "address_id",
       "value": "",
-      "enabled": true,
-      "type": "text"
+      "enabled": true
     },
     {
-      "key": "wishlist_variant_id",
+      "name": "wishlist_variant_id",
       "value": "",
-      "enabled": true,
-      "type": "text"
+      "enabled": true
     }
   ]
 }

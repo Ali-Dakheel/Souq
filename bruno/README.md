@@ -69,7 +69,7 @@ Inside Bruno after opening:
 
 ## Environment Variables
 
-### Predefined Variables (in each environment)
+### Predefined Variables (in each environment JSON)
 
 | Variable | Purpose | Auto-populated? |
 |---|---|---|
@@ -78,36 +78,73 @@ Inside Bruno after opening:
 | `address_id` | Address ID from create address request | ✅ Yes (after create) |
 | `wishlist_variant_id` | Variant ID from add-to-wishlist request | ✅ Yes (after add-item) |
 
-### Modify Environments
+### Environment Format
 
-To change the BASE_URL or add new variables:
+Each environment is a JSON file in `environments/`:
 
-1. In Bruno: **Environments** dropdown → select an environment
-2. Click the **pencil/edit icon** to edit
-3. Modify or add variables under `vars { ... }`
-4. Example:
-   ```bru
-   vars {
-     BASE_URL: http://localhost:3000
-     auth_token:
-     API_KEY: my-secret-key
+```json
+{
+  "name": "development",
+  "variables": [
+    { "name": "BASE_URL", "value": "http://localhost:8000", "enabled": true },
+    { "name": "auth_token", "value": "", "enabled": true },
+    { "name": "address_id", "value": "", "enabled": true }
+  ]
+}
+```
+
+### Secrets Management (.env file)
+
+For sensitive data like API keys, tokens, and secrets:
+
+1. **Create `.env` file** in the `bruno/` folder (don't commit to Git):
+   ```
+   AUTH_TOKEN=your_jwt_token_here
+   API_KEY=your_api_key_here
+   ```
+
+2. **Add to `.gitignore`** (already done):
+   ```
+   bruno/.env
+   ```
+
+3. **Share `.env.sample`** with your team (without actual values):
+   ```
+   AUTH_TOKEN=
+   API_KEY=
+   ```
+
+4. **Reference in environment files**:
+   ```json
+   {
+     "name": "development",
+     "variables": [
+       { "name": "API_KEY", "value": "{{process.env.API_KEY}}", "enabled": true }
+     ]
    }
    ```
-5. Save and restart the request
+
+### Modify Environments
+
+1. In Bruno: **Environments** dropdown → select an environment
+2. Click **Edit** (pencil icon)
+3. Modify variables in the JSON structure
+4. Save and refresh
 
 ### Add New Environment
 
-1. In Bruno: **Create new environment file**
-2. Or add manually: Create `environments/mycustom.bru`:
-   ```bru
-   vars {
-     BASE_URL: https://my-custom-server.com
-     auth_token:
-     address_id:
-     wishlist_variant_id:
-   }
-   ```
-3. Refresh Bruno — it will appear in the environments dropdown
+Create `environments/mycustom.json`:
+```json
+{
+  "name": "mycustom",
+  "variables": [
+    { "name": "BASE_URL", "value": "https://my-custom-server.com", "enabled": true },
+    { "name": "auth_token", "value": "", "enabled": true }
+  ]
+}
+```
+
+Refresh Bruno — it will appear in the environments dropdown.
 
 ## Assertions
 
