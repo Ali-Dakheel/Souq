@@ -1,9 +1,29 @@
 {
   "name": "production",
-  "variables": {
-    "BASE_URL": "https://api.souq.example.com",
-    "auth_token": "",
-    "address_id": "",
-    "wishlist_variant_id": ""
-  }
+  "values": [
+    {
+      "key": "BASE_URL",
+      "value": "https://api.souq.example.com",
+      "enabled": true,
+      "type": "text"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "enabled": true,
+      "type": "text"
+    },
+    {
+      "key": "address_id",
+      "value": "",
+      "enabled": true,
+      "type": "text"
+    },
+    {
+      "key": "wishlist_variant_id",
+      "value": "",
+      "enabled": true,
+      "type": "text"
+    }
+  ]
 }
