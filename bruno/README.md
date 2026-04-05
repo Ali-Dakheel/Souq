@@ -4,12 +4,28 @@ REST API test collection for the Souq ecommerce platform using [Bruno](https://w
 
 ## Setup
 
-1. **Install Bruno** from https://www.usebruno.com/
-2. **Open this folder** in Bruno (`File > Open Collection`)
-3. **Set environment variables** in `.env`:
-   ```
-   BASE_URL=http://localhost:8000
-   ```
+### 1. Install Bruno
+Download from https://www.usebruno.com/ (free, open-source)
+
+### 2. Open as Collection
+In Bruno:
+- Click **Create New** or **Open Collection**
+- Navigate to the `bruno/` folder in this repository
+- Click **Open**
+
+Bruno will recognize `bruno.json` and load the collection automatically.
+
+### 3. Select Environment
+Inside Bruno after opening:
+- Look for **Environments** dropdown (top-right area)
+- Select **development** (or create your own in `/environments`)
+- The `BASE_URL` will be set to `http://localhost:8000`
+
+### 4. Run Tests
+- Start with `Customers > auth > login.bru`
+- The login endpoint stores `auth_token` automatically
+- All subsequent requests use this token
+- Other requests can run in any order
 
 ## Collection Structure
 
