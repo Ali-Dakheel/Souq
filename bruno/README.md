@@ -17,15 +17,21 @@ Bruno will recognize `bruno.json` and load the collection automatically.
 
 ### 3. Select Environment
 Inside Bruno after opening:
-- Look for **Environments** dropdown (top-right area)
-- Select **development** (or create your own in `/environments`)
-- The `BASE_URL` will be set to `http://localhost:8000`
+- Look for **Environments** dropdown (top area, near the collection name)
+- Select **development** (auto-loaded from `environments/development.bru`)
+- This sets `BASE_URL=http://localhost:8000` and other variables
+
+**Available environments:**
+- **development** — Local testing (`http://localhost:8000`)
+- **staging** — Staging server (`https://staging-api.souq.example.com`)
+- **production** — Production server (`https://api.souq.example.com`)
 
 ### 4. Run Tests
-- Start with `Customers > auth > login.bru`
-- The login endpoint stores `auth_token` automatically
-- All subsequent requests use this token
-- Other requests can run in any order
+1. Start with **Customers → auth → login.bru** (click blue **Send** button)
+2. The login endpoint automatically stores `auth_token` in variables
+3. Run other requests in any order — they all use the stored token
+4. For addresses: run **create.bru** first (stores `address_id`), then **update.bru** and **delete.bru**
+5. For wishlists: run **add-item.bru** first (stores `wishlist_variant_id`), then **remove-item.bru**
 
 ## Collection Structure
 
@@ -63,12 +69,45 @@ Inside Bruno after opening:
 
 ## Environment Variables
 
-| Variable | Purpose |
-|---|---|
-| `BASE_URL` | API base URL (default: `http://localhost:8000`) |
-| `auth_token` | Bearer token from login (auto-populated) |
-| `address_id` | Address ID from create request (auto-populated) |
-| `wishlist_variant_id` | Variant ID from wishlist add (auto-populated) |
+### Predefined Variables (in each environment)
+
+| Variable | Purpose | Auto-populated? |
+|---|---|---|
+| `BASE_URL` | API base URL | ❌ Set per environment |
+| `auth_token` | Bearer token from login endpoint | ✅ Yes (after login) |
+| `address_id` | Address ID from create address request | ✅ Yes (after create) |
+| `wishlist_variant_id` | Variant ID from add-to-wishlist request | ✅ Yes (after add-item) |
+
+### Modify Environments
+
+To change the BASE_URL or add new variables:
+
+1. In Bruno: **Environments** dropdown → select an environment
+2. Click the **pencil/edit icon** to edit
+3. Modify or add variables under `vars { ... }`
+4. Example:
+   ```bru
+   vars {
+     BASE_URL: http://localhost:3000
+     auth_token:
+     API_KEY: my-secret-key
+   }
+   ```
+5. Save and restart the request
+
+### Add New Environment
+
+1. In Bruno: **Create new environment file**
+2. Or add manually: Create `environments/mycustom.bru`:
+   ```bru
+   vars {
+     BASE_URL: https://my-custom-server.com
+     auth_token:
+     address_id:
+     wishlist_variant_id:
+   }
+   ```
+3. Refresh Bruno — it will appear in the environments dropdown
 
 ## Assertions
 
