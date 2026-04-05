@@ -33,9 +33,13 @@ class StoreSettingsSeeder extends Seeder
             );
         }
 
-        // Use firstOrCreate for the sequence counter — never reset it on re-seed
+        // Use firstOrCreate for the sequence counters — never reset them on re-seed
         StoreSetting::firstOrCreate(
             ['key' => 'last_invoice_sequence'],
+            ['value' => '0', 'group' => 'commerce'],
+        );
+        StoreSetting::firstOrCreate(
+            ['key' => 'last_rma_sequence'],
             ['value' => '0', 'group' => 'commerce'],
         );
     }

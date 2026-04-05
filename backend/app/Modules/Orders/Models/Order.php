@@ -7,6 +7,7 @@ namespace App\Modules\Orders\Models;
 use App\Models\User;
 use App\Modules\Customers\Models\CustomerAddress;
 use App\Modules\Payments\Models\TapTransaction;
+use App\Modules\Returns\Models\ReturnRequest;
 use App\Modules\Shipping\Models\OrderShipping;
 use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -114,5 +115,10 @@ class Order extends Model
     public function isCancellable(): bool
     {
         return in_array($this->order_status, ['pending', 'initiated', 'pending_collection'], true);
+    }
+
+    public function returnRequests(): HasMany
+    {
+        return $this->hasMany(ReturnRequest::class);
     }
 }
