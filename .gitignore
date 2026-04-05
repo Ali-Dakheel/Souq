@@ -35,3 +35,4 @@ backend/boost.json
 
 # OS
 Thumbs.db
+.worktrees/
