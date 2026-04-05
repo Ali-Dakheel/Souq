@@ -9,13 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Drop stub tables in FK-safe order (before dropping columns from orders)
-        Schema::dropIfExists('delivery_method_zone_pricing');
-        Schema::dropIfExists('zone_coverage');
-        Schema::dropIfExists('delivery_methods');
-        Schema::dropIfExists('delivery_zones');
-
-        // 2. Drop columns from orders (SQLite doesn't support dropForeign by name)
+        // 1. Drop FK columns from orders FIRST (while referenced tables still exist)
         if (DB::getDriverName() === 'pgsql') {
             Schema::table('orders', function (Blueprint $table) {
                 $table->dropForeign(['delivery_zone_id']);
@@ -26,6 +20,12 @@ return new class extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn(['delivery_zone_id', 'delivery_method_id']);
         });
+
+        // 2. Now safe to drop the stub tables
+        Schema::dropIfExists('delivery_method_zone_pricing');
+        Schema::dropIfExists('zone_coverage');
+        Schema::dropIfExists('delivery_methods');
+        Schema::dropIfExists('delivery_zones');
     }
 
     public function down(): void

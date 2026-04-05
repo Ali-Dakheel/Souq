@@ -7,7 +7,7 @@ namespace App\Filament\Pages;
 use App\Modules\Settings\Services\StoreSettingsService;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
