@@ -1,0 +1,35 @@
+meta {
+  name: Create Address
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{BASE_URL}}/api/v1/customers/addresses
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+body:json {
+  {
+    "street": "123 Main St",
+    "city": "Manama",
+    "state": "Capital",
+    "postal_code": "428",
+    "country": "BH",
+    "is_default": false,
+    "label": "Home"
+  }
+}
+
+assert {
+  res.status: eq 201
+  res.body.data.street: eq "123 Main St"
+}
+
+script:post-response {
+  bru.setVar("address_id", res.body.data.id);
+}

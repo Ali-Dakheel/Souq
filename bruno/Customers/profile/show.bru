@@ -1,0 +1,18 @@
+meta {
+  name: Show Profile
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/profile
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.email: isNotEmpty
+}

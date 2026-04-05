@@ -1,0 +1,30 @@
+meta {
+  name: Update Address
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{BASE_URL}}/api/v1/customers/addresses/{{address_id}}
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+body:json {
+  {
+    "street": "456 New Street",
+    "city": "Riffa",
+    "state": "Southern",
+    "postal_code": "500",
+    "country": "BH",
+    "label": "Office"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.street: eq "456 New Street"
+}

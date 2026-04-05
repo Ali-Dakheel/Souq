@@ -1,0 +1,26 @@
+meta {
+  name: Update Profile
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{BASE_URL}}/api/v1/customers/profile
+  body: json
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+body:json {
+  {
+    "name": "Updated Name",
+    "phone": "+97366123456"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.name: eq "Updated Name"
+}

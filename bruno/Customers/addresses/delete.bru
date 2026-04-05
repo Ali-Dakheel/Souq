@@ -1,0 +1,17 @@
+meta {
+  name: Delete Address
+  type: http
+  seq: 10
+}
+
+delete {
+  url: {{BASE_URL}}/api/v1/customers/addresses/{{address_id}}
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+assert {
+  res.status: eq 204
+}

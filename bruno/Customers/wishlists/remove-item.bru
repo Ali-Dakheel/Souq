@@ -1,0 +1,17 @@
+meta {
+  name: Remove Item from Wishlist
+  type: http
+  seq: 13
+}
+
+delete {
+  url: {{BASE_URL}}/api/v1/wishlist/items/{{wishlist_variant_id}}
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+assert {
+  res.status: eq 204
+}

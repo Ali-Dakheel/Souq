@@ -1,0 +1,18 @@
+meta {
+  name: List Addresses
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/customers/addresses
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+}

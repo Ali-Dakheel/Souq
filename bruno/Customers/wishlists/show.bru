@@ -1,0 +1,18 @@
+meta {
+  name: Show Wishlist
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{BASE_URL}}/api/v1/wishlist
+}
+
+headers {
+  Authorization: Bearer {{auth_token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isArray
+}
