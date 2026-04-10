@@ -29,7 +29,7 @@ class InvoiceMail extends Mailable implements ShouldQueue
         app()->setLocale($this->order->locale ?? 'ar');
 
         return new Envelope(
-            to: $this->order->user->email ?? $this->order->guest_email,
+            to: $this->order->user?->email ?? $this->order->guest_email,
             subject: __('emails.invoice.subject', [
                 'number' => $this->invoice->invoice_number,
                 'order' => $this->order->order_number,

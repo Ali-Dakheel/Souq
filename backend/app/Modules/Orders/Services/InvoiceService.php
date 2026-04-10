@@ -32,14 +32,14 @@ class InvoiceService
      */
     public function generateInvoice(Order $order): Invoice
     {
-        return DB::transaction(function () use ($order): Invoice {
+        ['invoice' => $invoice, 'isNew' => $isNew, 'order' => $order] = DB::transaction(function () use ($order): array {
             // Lock the order row to prevent concurrent invoice generation
             Order::where('id', $order->id)->lockForUpdate()->first();
 
             // Re-check for existing invoice inside the transaction (idempotent)
             $existing = Invoice::where('order_id', $order->id)->first();
             if ($existing !== null) {
-                return $existing;
+                return ['invoice' => $existing, 'isNew' => false, 'order' => $order];
             }
 
             $order->loadMissing('items.variant.product');
@@ -127,10 +127,15 @@ class InvoiceService
                 $invoice->items()->create($lineItem);
             }
 
-            InvoiceGenerated::dispatch($invoice, $order);
-
-            return $invoice;
+            return ['invoice' => $invoice, 'isNew' => true, 'order' => $order];
         });
+
+        // --- Fire event outside the transaction so queued listeners don't run on rollback ---
+        if ($isNew) {
+            InvoiceGenerated::dispatch($invoice, $order);
+        }
+
+        return $invoice;
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Jobs;
 
+use App\Modules\Orders\Events\OrderCancelled;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderService;
 use Illuminate\Bus\Queueable;
@@ -48,14 +49,22 @@ class ReleaseInventoryReservationJob implements ShouldQueue
 
         $order->loadMissing('items');
 
-        try {
-            app(OrderService::class)->cancelOrder($order, 'Payment retry window expired.', 'system');
-        } catch (\InvalidArgumentException $e) {
-            // Order is not cancellable — already handled
-            Log::info('Order not cancellable during inventory release', [
-                'order_id' => $this->orderId,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $oldStatus = $order->order_status;
+
+        $order->update([
+            'order_status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        $orderService = app(OrderService::class);
+        $orderService->recordStatusChange($order, 'cancelled', 'system', 'Payment retry window expired.', $oldStatus);
+
+        $eventItems = $order->items
+            ->filter(fn ($i) => $i->variant_id !== null)
+            ->map(fn ($i) => ['variant_id' => $i->variant_id, 'quantity' => $i->quantity])
+            ->values()
+            ->toArray();
+
+        OrderCancelled::dispatch($order, $eventItems, 'Payment retry window expired.');
     }
 }

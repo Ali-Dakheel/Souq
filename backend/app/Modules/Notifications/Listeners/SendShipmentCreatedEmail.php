@@ -15,6 +15,6 @@ class SendShipmentCreatedEmail implements ShouldQueue
 
     public function handle(ShipmentCreated $event): void
     {
-        Mail::send(new ShipmentCreatedMail($event->shipment, $event->order));
+        Mail::queue(new ShipmentCreatedMail($event->shipment, $event->order));
     }
 }

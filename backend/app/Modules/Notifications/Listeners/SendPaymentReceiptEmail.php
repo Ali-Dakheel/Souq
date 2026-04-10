@@ -17,7 +17,7 @@ class SendPaymentReceiptEmail implements ShouldQueue
     {
         $transaction = $event->order->payments()->first();
         if ($transaction) {
-            Mail::send(new PaymentReceiptMail($event->order, $transaction));
+            Mail::queue(new PaymentReceiptMail($event->order, $transaction));
         }
     }
 }

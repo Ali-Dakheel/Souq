@@ -15,6 +15,6 @@ class SendInvoiceEmail implements ShouldQueue
 
     public function handle(InvoiceGenerated $event): void
     {
-        Mail::send(new InvoiceMail($event->invoice, $event->order));
+        Mail::queue(new InvoiceMail($event->invoice, $event->order));
     }
 }

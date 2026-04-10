@@ -45,17 +45,18 @@ class AddressService
      */
     public function createAddress(User $user, array $data): CustomerAddress
     {
-        return DB::transaction(function () use ($user, $data) {
+        $address = DB::transaction(function () use ($user, $data) {
             if (! empty($data['is_default'])) {
                 $this->clearDefault($user, $data['address_type']);
             }
 
-            $address = $user->addresses()->create($data);
-
-            AddressAdded::dispatch($address);
-
-            return $address;
+            return $user->addresses()->create($data);
         });
+
+        // --- Fire event outside the transaction so queued listeners don't run on rollback ---
+        AddressAdded::dispatch($address);
+
+        return $address;
     }
 
     /**
@@ -65,7 +66,7 @@ class AddressService
      */
     public function updateAddress(User $user, int $addressId, array $data): CustomerAddress
     {
-        return DB::transaction(function () use ($user, $addressId, $data) {
+        ['address' => $address, 'changed' => $changed] = DB::transaction(function () use ($user, $addressId, $data) {
             $address = $this->getAddress($user, $addressId);
 
             if (! empty($data['is_default'])) {
@@ -83,11 +84,17 @@ class AddressService
 
             if (! empty($changed)) {
                 $address->save();
-                AddressUpdated::dispatch($address, $changed);
             }
 
-            return $address;
+            return ['address' => $address, 'changed' => $changed];
         });
+
+        // --- Fire event outside the transaction so queued listeners don't run on rollback ---
+        if (! empty($changed)) {
+            AddressUpdated::dispatch($address, $changed);
+        }
+
+        return $address;
     }
 
     /**
@@ -125,17 +132,20 @@ class AddressService
      */
     public function setDefaultAddress(User $user, int $addressId): CustomerAddress
     {
-        return DB::transaction(function () use ($user, $addressId) {
+        $address = DB::transaction(function () use ($user, $addressId) {
             $address = $this->getAddress($user, $addressId);
 
             $this->clearDefault($user, $address->address_type);
 
             $address->forceFill(['is_default' => true])->save();
 
-            AddressUpdated::dispatch($address, ['is_default']);
-
             return $address;
         });
+
+        // --- Fire event outside the transaction so queued listeners don't run on rollback ---
+        AddressUpdated::dispatch($address, ['is_default']);
+
+        return $address;
     }
 
     /**

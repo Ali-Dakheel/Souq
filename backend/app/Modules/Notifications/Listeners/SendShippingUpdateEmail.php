@@ -15,6 +15,6 @@ class SendShippingUpdateEmail implements ShouldQueue
 
     public function handle(OrderFulfilled $event): void
     {
-        Mail::send(new ShippingUpdateMail($event->order));
+        Mail::queue(new ShippingUpdateMail($event->order));
     }
 }

@@ -15,6 +15,6 @@ class SendOrderConfirmationEmail implements ShouldQueue
 
     public function handle(OrderPlaced $event): void
     {
-        Mail::send(new OrderConfirmationMail($event->order));
+        Mail::queue(new OrderConfirmationMail($event->order));
     }
 }

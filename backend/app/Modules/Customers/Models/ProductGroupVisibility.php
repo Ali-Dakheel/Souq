@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductGroupVisibility extends Model
 {
+    protected $table = 'product_group_visibility';
+
     public $timestamps = false;
 
     protected $fillable = ['product_id', 'customer_group_id'];

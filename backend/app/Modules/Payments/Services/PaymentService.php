@@ -70,14 +70,14 @@ class PaymentService
      */
     public function handleChargeResult(string $tapChargeId): TapTransaction
     {
-        return DB::transaction(function () use ($tapChargeId) {
+        ['transaction' => $transaction, 'toDispatch' => $toDispatch] = DB::transaction(function () use ($tapChargeId) {
             $transaction = TapTransaction::where('tap_charge_id', $tapChargeId)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             // Already in a terminal state — skip
             if (in_array($transaction->status, ['captured', 'cancelled'], true)) {
-                return $transaction;
+                return ['transaction' => $transaction, 'toDispatch' => null];
             }
 
             // Fetch latest status from Tap
@@ -87,7 +87,7 @@ class PaymentService
 
             $tapStatus = strtoupper($tapCharge['status'] ?? '');
 
-            match ($tapStatus) {
+            $toDispatch = match ($tapStatus) {
                 'CAPTURED' => $this->handleCaptured($transaction),
                 'FAILED' => $this->handleFailed($transaction, $tapCharge),
                 'VOID' => $this->handleVoid($transaction),
@@ -96,8 +96,23 @@ class PaymentService
 
             $transaction->save();
 
-            return $transaction;
+            return ['transaction' => $transaction, 'toDispatch' => $toDispatch];
         });
+
+        // --- Fire events outside the transaction so queued listeners don't run on rollback ---
+        if ($toDispatch !== null) {
+            match ($toDispatch['event']) {
+                'captured' => PaymentCaptured::dispatch($toDispatch['order']),
+                'failed' => (function () use ($toDispatch): void {
+                    PaymentFailed::dispatch($toDispatch['order']);
+                    ReleaseInventoryReservationJob::dispatch($toDispatch['order']->id)
+                        ->delay(now()->addMinutes(30));
+                })(),
+                default => null,
+            };
+        }
+
+        return $transaction;
     }
 
     /**
@@ -122,41 +137,41 @@ class PaymentService
     // Private handlers
     // -----------------------------------------------------------------------
 
-    private function handleCaptured(TapTransaction $transaction): void
+    /** @return array{event: string, order: Order} */
+    private function handleCaptured(TapTransaction $transaction): array
     {
         $transaction->status = 'captured';
         $transaction->webhook_received_at = now();
 
         $order = $transaction->order;
-        PaymentCaptured::dispatch($order);
 
         Log::info('Payment captured', [
             'order_id' => $order->id,
             'tap_charge_id' => $transaction->tap_charge_id,
         ]);
+
+        return ['event' => 'captured', 'order' => $order];
     }
 
-    private function handleFailed(TapTransaction $transaction, array $tapCharge): void
+    /** @return array{event: string, order: Order} */
+    private function handleFailed(TapTransaction $transaction, array $tapCharge): array
     {
         $transaction->status = 'failed';
         $transaction->failure_reason = $tapCharge['response']['message'] ?? null;
         $transaction->webhook_received_at = now();
 
         $order = $transaction->order;
-        PaymentFailed::dispatch($order);
-
-        // Dispatch delayed job to release inventory if not retried within 30 minutes
-        ReleaseInventoryReservationJob::dispatch($order->id)
-            ->delay(now()->addMinutes(30));
 
         Log::info('Payment failed', [
             'order_id' => $order->id,
             'tap_charge_id' => $transaction->tap_charge_id,
             'reason' => $transaction->failure_reason,
         ]);
+
+        return ['event' => 'failed', 'order' => $order];
     }
 
-    private function handleVoid(TapTransaction $transaction): void
+    private function handleVoid(TapTransaction $transaction): null
     {
         $transaction->status = 'cancelled';
         $transaction->webhook_received_at = now();
@@ -165,6 +180,8 @@ class PaymentService
             'order_id' => $transaction->order_id,
             'tap_charge_id' => $transaction->tap_charge_id,
         ]);
+
+        return null;
     }
 
     private function createTapCustomer(User $user): void

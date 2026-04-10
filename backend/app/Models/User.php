@@ -63,8 +63,8 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(CustomerGroup::class);
     }
 
-    public function wishlists(): HasMany
+    public function wishlist(): HasOne
     {
-        return $this->hasMany(Wishlist::class);
+        return $this->hasOne(Wishlist::class);
     }
 }

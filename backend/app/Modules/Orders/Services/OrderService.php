@@ -101,7 +101,7 @@ class OrderService
             $shippingRateFils = $found ? $found['rate_fils'] : 0;
         }
 
-        $order = DB::transaction(function () use (
+        ['order' => $order, 'eventItems' => $eventItems, 'isCod' => $isCod] = DB::transaction(function () use (
             $cart, $userId, $guestEmail, $paymentMethod, $notes, $locale,
             $shippingAddress, $billingAddress, $totals, $shippingRateFils,
         ) {
@@ -181,16 +181,22 @@ class OrderService
             // --- Initial status history entry ---
             if ($isCod) {
                 $this->recordStatusChange($order, 'pending_collection', 'system', 'COD order — awaiting cash collection.');
-                GenerateInvoiceJob::dispatch($order->id);
             } else {
                 $this->recordStatusChange($order, 'pending', 'system', 'Order placed.');
             }
 
-            // --- Fire event (Inventory reserves stock, Notifications sends email) ---
-            OrderPlaced::dispatch($order, $eventItems);
-
-            return $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']);
+            return [
+                'order' => $order->load(['items', 'statusHistory', 'shippingAddress', 'billingAddress']),
+                'eventItems' => $eventItems,
+                'isCod' => $isCod,
+            ];
         });
+
+        // --- Fire events outside the transaction so queued listeners don't run on rollback ---
+        OrderPlaced::dispatch($order, $eventItems);
+        if ($isCod) {
+            GenerateInvoiceJob::dispatch($order->id);
+        }
 
         // --- Attach shipping to order (outside transaction) ---
         if ($shippingMethod !== null) {

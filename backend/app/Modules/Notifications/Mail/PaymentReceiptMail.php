@@ -29,7 +29,7 @@ class PaymentReceiptMail extends Mailable implements ShouldQueue
         app()->setLocale($this->order->locale ?? 'ar');
 
         return new Envelope(
-            to: $this->order->user->email,
+            to: $this->order->user?->email ?? $this->order->guest_email,
             subject: __('emails.payment_receipt.subject', ['number' => $this->order->order_number]),
         );
     }

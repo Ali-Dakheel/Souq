@@ -26,7 +26,7 @@ class ShippingUpdateMail extends Mailable implements ShouldQueue
         app()->setLocale($this->order->locale ?? 'ar');
 
         return new Envelope(
-            to: $this->order->user->email,
+            to: $this->order->user?->email ?? $this->order->guest_email,
             subject: __('emails.shipping_update.subject', ['number' => $this->order->order_number]),
         );
     }
