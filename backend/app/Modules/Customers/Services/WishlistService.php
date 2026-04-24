@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Customers\Services;
 
 use App\Models\User;
+use App\Modules\Cart\Models\Cart;
+use App\Modules\Cart\Models\CartItem;
 use App\Modules\Cart\Services\CartService;
 use App\Modules\Customers\Models\Wishlist;
 use App\Modules\Customers\Models\WishlistItem;
@@ -57,6 +59,7 @@ class WishlistService
         return $wishlist;
     }
 
+    /** @return array{cart_item: CartItem, cart: Cart} */
     public function moveItemToCart(Wishlist $wishlist, int $variantId, User $user): array
     {
         $cartService = app(CartService::class);

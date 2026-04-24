@@ -10,12 +10,12 @@ use App\Modules\Catalog\Filament\Resources\AttributeResource\Pages\ListAttribute
 use App\Modules\Catalog\Filament\Resources\AttributeResource\RelationManagers\AttributeValuesRelationManager;
 use App\Modules\Catalog\Models\Attribute;
 use BackedEnum;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

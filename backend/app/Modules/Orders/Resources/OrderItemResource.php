@@ -8,12 +8,12 @@ use App\Modules\Orders\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin OrderItem */
 class OrderItemResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var OrderItem $this */
         return [
             'sku' => $this->sku,
             'product_name' => $this->product_name,

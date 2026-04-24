@@ -8,12 +8,12 @@ use App\Modules\Orders\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Order */
 class OrderListResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var Order $this */
         return [
             'id' => $this->id,
             'order_number' => $this->order_number,

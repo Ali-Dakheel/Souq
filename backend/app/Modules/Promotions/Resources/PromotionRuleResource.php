@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Promotions\Resources;
 
+use App\Modules\Promotions\Models\PromotionRule;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin PromotionRule */
 class PromotionRuleResource extends JsonResource
 {
     /**

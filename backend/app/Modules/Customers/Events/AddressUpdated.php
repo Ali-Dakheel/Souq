@@ -13,7 +13,7 @@ class AddressUpdated
     use Dispatchable, SerializesModels;
 
     /**
-     * @param  array<string, mixed>  $changedFields
+     * @param  list<string>  $changedFields
      */
     public function __construct(
         public readonly CustomerAddress $address,

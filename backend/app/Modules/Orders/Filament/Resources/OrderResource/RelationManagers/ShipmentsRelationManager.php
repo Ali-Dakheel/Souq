@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers;
 
+use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Models\Shipment;
 use App\Modules\Orders\Services\ShipmentService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -13,7 +15,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\ValidationException;
@@ -65,17 +66,17 @@ class ShipmentsRelationManager extends RelationManager
                     ->icon('heroicon-o-truck')
                     ->form(function (): array {
                         $order = $this->getOwnerRecord();
+                        if (! $order instanceof Order) {
+                            throw new \LogicException('ShipmentsRelationManager expects an Order owner.');
+                        }
                         $order->load(['items.shipmentItems']);
 
-                        $itemOptions = $order->items
-                            ->filter(fn ($item) => $item->quantity_to_ship > 0)
-                            ->map(fn ($item) => [
-                                'order_item_id' => $item->id,
-                                'label' => "{$item->sku} (max: {$item->quantity_to_ship})",
-                                'max_qty' => $item->quantity_to_ship,
-                            ])
-                            ->values()
-                            ->toArray();
+                        $itemOptions = [];
+                        foreach ($order->items as $item) {
+                            if ($item->quantity_to_ship > 0) {
+                                $itemOptions[$item->id] = "{$item->sku} (max: {$item->quantity_to_ship})";
+                            }
+                        }
 
                         return [
                             TextInput::make('carrier')
@@ -91,9 +92,7 @@ class ShipmentsRelationManager extends RelationManager
                                 ->schema([
                                     Select::make('order_item_id')
                                         ->label('Order Item')
-                                        ->options(
-                                            collect($itemOptions)->pluck('label', 'order_item_id')->toArray()
-                                        )
+                                        ->options($itemOptions)
                                         ->required(),
                                     TextInput::make('quantity_shipped')
                                         ->label('Quantity')
@@ -107,6 +106,9 @@ class ShipmentsRelationManager extends RelationManager
                     })
                     ->action(function (array $data): void {
                         $order = $this->getOwnerRecord();
+                        if (! $order instanceof Order) {
+                            throw new \LogicException('ShipmentsRelationManager expects an Order owner.');
+                        }
 
                         try {
                             app(ShipmentService::class)->createShipment(

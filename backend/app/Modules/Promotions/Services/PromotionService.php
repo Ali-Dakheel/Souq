@@ -6,6 +6,7 @@ namespace App\Modules\Promotions\Services;
 
 use App\Models\User;
 use App\Modules\Cart\Models\Cart;
+use App\Modules\Promotions\Models\PromotionCondition;
 use App\Modules\Promotions\Models\PromotionRule;
 use App\Modules\Promotions\Models\PromotionUsage;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -62,7 +63,7 @@ class PromotionService
     /**
      * Evaluate a single promotion condition against a cart and user.
      */
-    private function evaluateCondition($condition, Cart $cart, ?User $user): bool
+    private function evaluateCondition(PromotionCondition $condition, Cart $cart, ?User $user): bool
     {
         $type = $condition->type;
         $operator = $condition->operator;
@@ -81,7 +82,7 @@ class PromotionService
     /**
      * Evaluate cart_total condition.
      */
-    private function evaluateCartTotal(Cart $cart, string $operator, $value): bool
+    private function evaluateCartTotal(Cart $cart, string $operator, mixed $value): bool
     {
         $cartTotal = $cart->items->sum('line_total_fils');
 
@@ -91,7 +92,7 @@ class PromotionService
     /**
      * Evaluate item_qty condition.
      */
-    private function evaluateItemQty(Cart $cart, string $operator, $value): bool
+    private function evaluateItemQty(Cart $cart, string $operator, mixed $value): bool
     {
         $totalQty = $cart->items->sum('quantity');
 
@@ -101,7 +102,8 @@ class PromotionService
     /**
      * Evaluate customer_group condition.
      */
-    private function evaluateCustomerGroup(?User $user, string $operator, $value): bool
+    /** @param array<int, int>|mixed $value */
+    private function evaluateCustomerGroup(?User $user, string $operator, mixed $value): bool
     {
         if ($user === null) {
             return false;
@@ -123,7 +125,8 @@ class PromotionService
     /**
      * Evaluate product_in_cart condition.
      */
-    private function evaluateProductInCart(Cart $cart, string $operator, $value): bool
+    /** @param array<int, int>|mixed $value */
+    private function evaluateProductInCart(Cart $cart, string $operator, mixed $value): bool
     {
         $productIds = $cart->items
             ->map(fn ($item) => $item->variant?->product_id)
@@ -146,7 +149,8 @@ class PromotionService
     /**
      * Evaluate category_in_cart condition.
      */
-    private function evaluateCategoryInCart(Cart $cart, string $operator, $value): bool
+    /** @param array<int, int>|mixed $value */
+    private function evaluateCategoryInCart(Cart $cart, string $operator, mixed $value): bool
     {
         $categoryIds = $cart->items
             ->map(fn ($item) => $item->variant?->product?->category_id)
@@ -169,7 +173,7 @@ class PromotionService
     /**
      * Compare values using the specified operator.
      */
-    private function compareValues($left, string $operator, $right): bool
+    private function compareValues(mixed $left, string $operator, mixed $right): bool
     {
         return match ($operator) {
             'gte' => $left >= $right,

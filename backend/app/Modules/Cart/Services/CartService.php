@@ -15,6 +15,7 @@ use App\Modules\Cart\Models\Cart;
 use App\Modules\Cart\Models\CartAbandonment;
 use App\Modules\Cart\Models\CartItem;
 use App\Modules\Cart\Models\Coupon;
+use App\Modules\Catalog\Models\InventoryItem;
 use App\Modules\Catalog\Models\Variant;
 use App\Modules\Customers\Services\CustomerGroupService;
 use App\Modules\Promotions\Services\PromotionService;
@@ -69,14 +70,15 @@ class CartService
             throw ValidationException::withMessages(['variant_id' => ['This product is not available.']]);
         }
 
-        $stock = $variant->inventory?->quantity_available ?? 0;
+        $inv = $variant->inventory()->first();
+        $stock = $inv instanceof InventoryItem ? $inv->quantity_available : 0;
         $maxQty = config('cart.max_quantity_per_item', 10);
 
         $existing = CartItem::where('cart_id', $cart->id)
             ->where('variant_id', $variantId)
             ->first();
 
-        $newQuantity = $quantity + ($existing?->quantity ?? 0);
+        $newQuantity = $quantity + ($existing !== null ? $existing->quantity : 0);
         $this->assertQuantity($newQuantity, $stock, $maxQty);
 
         if ($existing) {
@@ -107,7 +109,14 @@ class CartService
     {
         $item->loadMissing('variant.inventory');
 
-        $stock = $item->variant?->inventory?->quantity_available ?? 0;
+        $variant = $item->variant;
+        $stock = 0;
+        if ($variant !== null) {
+            $inv = $variant->inventory()->first();
+            if ($inv instanceof InventoryItem) {
+                $stock = $inv->quantity_available;
+            }
+        }
         $maxQty = config('cart.max_quantity_per_item', 10);
 
         $this->assertQuantity($quantity, $stock, $maxQty);
@@ -188,7 +197,14 @@ class CartService
                     continue; // variant was deleted
                 }
 
-                $stock = $guestItem->variant?->inventory?->quantity_available ?? 0;
+                $guestVariant = $guestItem->variant;
+                $stock = 0;
+                if ($guestVariant !== null) {
+                    $inv = $guestVariant->inventory()->first();
+                    if ($inv instanceof InventoryItem) {
+                        $stock = $inv->quantity_available;
+                    }
+                }
                 $cap = min($stock, $maxQty);
 
                 if ($cap <= 0) {
@@ -322,7 +338,8 @@ class CartService
                 continue;
             }
 
-            $stock = $item->variant->inventory?->quantity_available ?? 0;
+            $inv = $item->variant->inventory()->first();
+            $stock = $inv instanceof InventoryItem ? $inv->quantity_available : 0;
             if ($stock < $item->quantity) {
                 $name = $item->variant->product->name['en'] ?? 'An item';
                 if ($stock === 0) {

@@ -4,16 +4,34 @@ declare(strict_types=1);
 
 namespace App\Modules\Cart\Models;
 
-use App\Modules\Catalog\Models\Category;
-use App\Modules\Catalog\Models\Product;
+use Carbon\Carbon;
 use Database\Factories\CouponFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property array<string, string>|null $name
+ * @property array<string, string>|null $description
+ * @property string $discount_type
+ * @property int $discount_value
+ * @property int|null $minimum_order_amount_fils
+ * @property int|null $maximum_discount_fils
+ * @property int|null $max_uses_global
+ * @property int|null $max_uses_per_user
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $expires_at
+ * @property bool $is_active
+ * @property string $applicable_to
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class Coupon extends Model
 {
+    /** @use HasFactory<CouponFactory> */
     use HasFactory;
 
     protected static function newFactory(): CouponFactory
@@ -52,17 +70,24 @@ class Coupon extends Model
 
     /**
      * Polymorphic pivot — itemable_type = 'category' | 'product'
+     *
+     * @return HasMany<CouponApplicableItem, $this>
      */
     public function applicableItems(): HasMany
     {
         return $this->hasMany(CouponApplicableItem::class);
     }
 
+    /** @return HasMany<CouponUsage, $this> */
     public function usages(): HasMany
     {
         return $this->hasMany(CouponUsage::class);
     }
 
+    /**
+     * @param  Builder<Coupon>  $query
+     * @return Builder<Coupon>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query

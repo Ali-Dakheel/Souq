@@ -4,10 +4,26 @@ declare(strict_types=1);
 
 namespace App\Modules\Promotions\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name_en
+ * @property string $name_ar
+ * @property string|null $description
+ * @property bool $is_active
+ * @property int $priority
+ * @property bool $is_exclusive
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $expires_at
+ * @property int|null $max_uses_global
+ * @property int|null $max_uses_per_user
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class PromotionRule extends Model
 {
     protected $fillable = [
@@ -33,21 +49,28 @@ class PromotionRule extends Model
         'max_uses_per_user' => 'integer',
     ];
 
+    /** @return HasMany<PromotionCondition, $this> */
     public function conditions(): HasMany
     {
         return $this->hasMany(PromotionCondition::class);
     }
 
+    /** @return HasMany<PromotionAction, $this> */
     public function actions(): HasMany
     {
         return $this->hasMany(PromotionAction::class);
     }
 
+    /** @return HasMany<PromotionUsage, $this> */
     public function usages(): HasMany
     {
         return $this->hasMany(PromotionUsage::class);
     }
 
+    /**
+     * @param  Builder<PromotionRule>  $query
+     * @return Builder<PromotionRule>
+     */
     public function scopeActive(Builder $query): Builder
     {
         $now = now();

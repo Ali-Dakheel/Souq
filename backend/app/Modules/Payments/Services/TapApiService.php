@@ -30,6 +30,9 @@ class TapApiService
     /**
      * POST /v2/charges/
      *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     *
      * @throws TapApiException
      */
     public function createCharge(array $payload): array
@@ -39,6 +42,8 @@ class TapApiService
 
     /**
      * GET /v2/charges/{charge_id}
+     *
+     * @return array<string, mixed>
      *
      * @throws TapApiException
      */
@@ -50,6 +55,9 @@ class TapApiService
     /**
      * POST /v2/refunds/
      *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     *
      * @throws TapApiException
      */
     public function createRefund(array $payload): array
@@ -60,6 +68,9 @@ class TapApiService
     /**
      * POST /v2/customers/
      *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     *
      * @throws TapApiException
      */
     public function createCustomer(array $payload): array
@@ -68,6 +79,9 @@ class TapApiService
     }
 
     /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     *
      * @throws TapApiException
      */
     private function post(string $path, array $payload): array
@@ -101,6 +115,8 @@ class TapApiService
     }
 
     /**
+     * @return array<string, mixed>
+     *
      * @throws TapApiException
      */
     private function get(string $path): array

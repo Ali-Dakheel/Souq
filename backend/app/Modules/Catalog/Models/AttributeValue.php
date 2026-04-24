@@ -7,6 +7,14 @@ namespace App\Modules\Catalog\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $attribute_id
+ * @property array<string, string> $name
+ * @property string $value_key
+ * @property string|null $display_value
+ * @property int $sort_order
+ */
 class AttributeValue extends Model
 {
     protected $table = 'attribute_values';
@@ -24,6 +32,7 @@ class AttributeValue extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<Attribute, $this> */
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class);

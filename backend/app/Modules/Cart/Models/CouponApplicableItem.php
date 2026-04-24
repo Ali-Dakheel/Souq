@@ -7,6 +7,12 @@ namespace App\Modules\Cart\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $coupon_id
+ * @property string $itemable_type
+ * @property int $itemable_id
+ */
 class CouponApplicableItem extends Model
 {
     public $timestamps = false;
@@ -19,6 +25,7 @@ class CouponApplicableItem extends Model
         'itemable_id',
     ];
 
+    /** @return BelongsTo<Coupon, $this> */
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);

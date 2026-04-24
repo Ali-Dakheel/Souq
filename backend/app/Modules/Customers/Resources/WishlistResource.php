@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Customers\Resources;
 
+use App\Modules\Customers\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Wishlist */
 class WishlistResource extends JsonResource
 {
     /**
@@ -20,8 +22,8 @@ class WishlistResource extends JsonResource
             'share_token' => $this->share_token,
             'is_public' => $this->is_public,
             'items' => WishlistItemResource::collection($this->whenLoaded('items')),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }

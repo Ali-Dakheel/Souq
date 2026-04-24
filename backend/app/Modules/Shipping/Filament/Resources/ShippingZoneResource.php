@@ -10,12 +10,12 @@ use App\Modules\Shipping\Filament\Resources\ShippingZoneResource\Pages\ListShipp
 use App\Modules\Shipping\Filament\Resources\ShippingZoneResource\RelationManagers\ShippingMethodsRelationManager;
 use App\Modules\Shipping\Models\ShippingZone;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -85,6 +85,7 @@ class ShippingZoneResource extends Resource
             ]);
     }
 
+    /** @return array<int, class-string> */
     public static function getRelationManagers(): array
     {
         return [

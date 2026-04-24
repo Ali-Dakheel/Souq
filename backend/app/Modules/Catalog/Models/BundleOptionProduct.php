@@ -7,6 +7,16 @@ namespace App\Modules\Catalog\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $bundle_option_id
+ * @property int $product_id
+ * @property int $default_quantity
+ * @property int $min_quantity
+ * @property int $max_quantity
+ * @property int|null $price_override_fils
+ * @property int $sort_order
+ */
 class BundleOptionProduct extends Model
 {
     public $timestamps = false;
@@ -29,11 +39,13 @@ class BundleOptionProduct extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<BundleOption, $this> */
     public function bundleOption(): BelongsTo
     {
         return $this->belongsTo(BundleOption::class);
     }
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

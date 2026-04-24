@@ -108,9 +108,10 @@ class LoyaltyService
     {
         $account = LoyaltyAccount::where('user_id', $user->id)->first();
 
-        return $account?->points_balance ?? 0;
+        return $account instanceof LoyaltyAccount ? $account->points_balance : 0;
     }
 
+    /** @return Collection<int, LoyaltyTransaction> */
     public function getHistory(User $user): Collection
     {
         $account = $this->getOrCreateAccount($user);
@@ -200,6 +201,6 @@ class LoyaltyService
     {
         $row = LoyaltyConfig::find($key);
 
-        return $row?->value ?? '0';
+        return $row instanceof LoyaltyConfig ? $row->value : '0';
     }
 }

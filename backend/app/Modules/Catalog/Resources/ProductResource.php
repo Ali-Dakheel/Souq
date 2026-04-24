@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Resources;
 
+use App\Modules\Catalog\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Product */
 class ProductResource extends JsonResource
 {
     /**
@@ -46,8 +48,8 @@ class ProductResource extends JsonResource
                 isset($this->average_rating),
                 $this->average_rating
             ),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }

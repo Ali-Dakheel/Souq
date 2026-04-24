@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Resources;
 
+use App\Modules\Orders\Models\Shipment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Shipment */
 class ShipmentResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

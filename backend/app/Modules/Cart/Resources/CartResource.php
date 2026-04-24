@@ -8,8 +8,10 @@ use App\Modules\Cart\Models\Cart;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Cart */
 class CartResource extends JsonResource
 {
+    /** @param array<string, int> $totals */
     public function __construct(
         mixed $resource,
         private readonly array $totals = [],
@@ -20,8 +22,7 @@ class CartResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var Cart $this */
-        $coupon = $this->coupon_code ? $this->coupon()->first() : null;
+        $coupon = $this->coupon_code !== null ? $this->coupon()->first() : null;
 
         return [
             'id' => $this->id,

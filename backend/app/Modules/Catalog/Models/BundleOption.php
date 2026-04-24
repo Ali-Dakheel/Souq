@@ -9,6 +9,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property string $name_en
+ * @property string $name_ar
+ * @property bool $required
+ * @property int $sort_order
+ */
 class BundleOption extends Model
 {
     protected $fillable = [
@@ -24,11 +32,13 @@ class BundleOption extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /** @return HasMany<BundleOptionProduct, $this> */
     public function products(): HasMany
     {
         return $this->hasMany(BundleOptionProduct::class);

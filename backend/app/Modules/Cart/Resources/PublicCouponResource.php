@@ -8,12 +8,12 @@ use App\Modules\Cart\Models\Coupon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Coupon */
 class PublicCouponResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var Coupon $this */
         return [
             'code' => $this->code,
             'name' => $this->name,

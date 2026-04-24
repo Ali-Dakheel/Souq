@@ -8,6 +8,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class OrderShippingRelationManager extends RelationManager
 {
@@ -44,12 +45,12 @@ class OrderShippingRelationManager extends RelationManager
         return false;
     }
 
-    public function canEdit($record): bool
+    public function canEdit(Model $record): bool
     {
         return false;
     }
 
-    public function canDelete($record): bool
+    public function canDelete(Model $record): bool
     {
         return false;
     }

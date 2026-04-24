@@ -8,18 +8,18 @@ use App\Modules\Orders\Models\OrderStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin OrderStatusHistory */
 class OrderStatusHistoryResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var OrderStatusHistory $this */
         return [
             'old_status' => $this->old_status,
             'new_status' => $this->new_status,
             'changed_by' => $this->changed_by,
             'reason' => $this->reason,
-            'created_at' => $this->created_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

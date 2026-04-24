@@ -178,7 +178,10 @@ class CartController extends Controller
         );
     }
 
-    /** @param array{subtotal_fils: int, discount_fils: int, promotion_discount_fils: int, vat_fils: int, total_fils: int} $totals */
+    /**
+     * @param  array{subtotal_fils: int, discount_fils: int, promotion_discount_fils: int, vat_fils: int, total_fils: int}  $totals
+     * @return array<string, mixed>
+     */
     private function cartSummary(Cart $cart, array $totals): array
     {
         return [

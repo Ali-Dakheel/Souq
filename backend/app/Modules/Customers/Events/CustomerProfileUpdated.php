@@ -13,7 +13,7 @@ class CustomerProfileUpdated
     use Dispatchable, SerializesModels;
 
     /**
-     * @param  array<string, mixed>  $changedFields
+     * @param  list<string>  $changedFields
      */
     public function __construct(
         public readonly User $user,

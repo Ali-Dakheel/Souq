@@ -149,6 +149,7 @@ class CouponService
         return $query->get();
     }
 
+    /** @param array<int, array{product_id: int|null, category_id: int|null, line_total_fils: int}> $items */
     private function getApplicableSubtotal(Coupon $coupon, int $subtotalFils, array $items): int
     {
         if ($coupon->appliesToAll() || empty($items)) {

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Payments\Http\Resources;
 
+use App\Modules\Payments\Models\Refund;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Refund */
 class RefundResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [
@@ -20,8 +23,8 @@ class RefundResource extends JsonResource
             'refund_reason' => $this->refund_reason,
             'status' => $this->status,
             'customer_notes' => $this->customer_notes,
-            'admin_notes' => $this->when($this->admin_notes, $this->admin_notes),
-            'created_at' => $this->created_at?->toISOString(),
+            'admin_notes' => $this->when($this->admin_notes !== null, $this->admin_notes),
+            'created_at' => $this->created_at->toISOString(),
             'processed_at' => $this->processed_at?->toISOString(),
         ];
     }

@@ -5,12 +5,27 @@ declare(strict_types=1);
 namespace App\Modules\Catalog\Models;
 
 use App\Modules\Customers\Models\VariantGroupPrice;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property string $sku
+ * @property array<string, mixed> $attributes
+ * @property int|null $price_fils
+ * @property bool $is_available
+ * @property int $sort_order
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Product $product
+ * @property InventoryItem|null $inventory
+ * @property-read int $effective_price_fils
+ */
 class Variant extends Model
 {
     protected $fillable = [
@@ -29,16 +44,19 @@ class Variant extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /** @return HasOne<InventoryItem, $this> */
     public function inventory(): HasOne
     {
         return $this->hasOne(InventoryItem::class);
     }
 
+    /** @return HasMany<VariantGroupPrice, $this> */
     public function groupPrices(): HasMany
     {
         return $this->hasMany(VariantGroupPrice::class);

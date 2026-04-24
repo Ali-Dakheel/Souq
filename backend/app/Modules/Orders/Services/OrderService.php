@@ -101,7 +101,8 @@ class OrderService
             $shippingRateFils = $found ? $found['rate_fils'] : 0;
         }
 
-        ['order' => $order, 'eventItems' => $eventItems, 'isCod' => $isCod] = DB::transaction(function () use (
+        /** @var array{order: Order, eventItems: list<array{variant_id: int, quantity: int}>, isCod: bool} $result */
+        $result = DB::transaction(function () use (
             $cart, $userId, $guestEmail, $paymentMethod, $notes, $locale,
             $shippingAddress, $billingAddress, $totals, $shippingRateFils,
         ) {
@@ -115,7 +116,7 @@ class OrderService
                     ->lockForUpdate()
                     ->first();
 
-                $available = $inventory?->quantity_on_sale ?? 0;
+                $available = $inventory instanceof InventoryItem ? $inventory->quantity_on_sale : 0;
                 if ($available < $item->quantity) {
                     $name = $item->variant->product->name['en'] ?? 'An item';
                     throw ValidationException::withMessages([
@@ -191,6 +192,10 @@ class OrderService
                 'isCod' => $isCod,
             ];
         });
+
+        $order = $result['order'];
+        $eventItems = $result['eventItems'];
+        $isCod = $result['isCod'];
 
         // --- Fire events outside the transaction so queued listeners don't run on rollback ---
         OrderPlaced::dispatch($order, $eventItems);
@@ -402,6 +407,7 @@ class OrderService
     /**
      * Paginated order list for an authenticated user, with optional status filter.
      */
+    /** @return LengthAwarePaginator<int, Order> */
     public function getUserOrders(
         int $userId,
         int $page = 1,

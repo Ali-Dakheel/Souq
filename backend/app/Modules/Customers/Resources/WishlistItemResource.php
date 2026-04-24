@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Customers\Resources;
 
+use App\Modules\Customers\Models\WishlistItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin WishlistItem */
 class WishlistItemResource extends JsonResource
 {
     /**
@@ -28,8 +30,8 @@ class WishlistItemResource extends JsonResource
             if ($this->variant->relationLoaded('product')) {
                 $variant['product'] = [
                     'id' => $this->variant->product->id,
-                    'name_en' => $this->variant->product->name_en,
-                    'name_ar' => $this->variant->product->name_ar,
+                    'name_en' => $this->variant->product->name['en'] ?? '',
+                    'name_ar' => $this->variant->product->name['ar'] ?? '',
                     'base_price_fils' => $this->variant->product->base_price_fils,
                 ];
             }
@@ -40,7 +42,7 @@ class WishlistItemResource extends JsonResource
             'wishlist_id' => $this->wishlist_id,
             'variant_id' => $this->variant_id,
             'added_at' => $this->added_at?->toIso8601String(),
-            'variant' => $variant ?: null,
+            'variant' => $variant !== [] ? $variant : null,
         ];
     }
 }

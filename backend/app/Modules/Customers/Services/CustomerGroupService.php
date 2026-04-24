@@ -146,6 +146,6 @@ class CustomerGroupService
             ->first();
 
         // If found, return the group price; otherwise return default price
-        return $groupPrice?->price_fils ?? $variant->effective_price_fils;
+        return $groupPrice instanceof VariantGroupPrice ? $groupPrice->price_fils : $variant->effective_price_fils;
     }
 }

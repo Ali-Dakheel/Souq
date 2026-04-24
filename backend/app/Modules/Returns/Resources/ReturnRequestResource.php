@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Returns\Resources;
 
+use App\Modules\Returns\Models\ReturnRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin ReturnRequest */
 class ReturnRequestResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [
@@ -27,8 +30,8 @@ class ReturnRequestResource extends JsonResource
                 'quantity_returned' => $item->quantity_returned,
                 'condition' => $item->condition,
             ])),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }

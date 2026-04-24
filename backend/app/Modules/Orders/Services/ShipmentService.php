@@ -104,7 +104,7 @@ class ShipmentService
         });
 
         // Dispatch AFTER transaction commits — prevents emails firing on rollback
-        ShipmentCreated::dispatch($shipment, $shipment->order);
+        ShipmentCreated::dispatch($shipment, $order);
 
         return $shipment;
     }
@@ -136,7 +136,7 @@ class ShipmentService
             'delivered_at' => now(),
         ]);
 
-        $order = $shipment->order;
+        $order = $shipment->order()->firstOrFail();
 
         $allDelivered = $order->shipments()
             ->where('status', '!=', 'delivered')
@@ -155,6 +155,8 @@ class ShipmentService
 
     /**
      * Get all shipments for an order with items loaded.
+     *
+     * @return Collection<int, Shipment>
      */
     public function getShipmentsForOrder(Order $order): Collection
     {

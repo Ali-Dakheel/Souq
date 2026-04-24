@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Customers\Resources;
 
+use App\Modules\Customers\Models\CustomerGroup;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin CustomerGroup */
 class CustomerGroupResource extends JsonResource
 {
     /**
@@ -21,7 +23,7 @@ class CustomerGroupResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'is_default' => $this->is_default,
-            'created_at' => $this->created_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

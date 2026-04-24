@@ -14,22 +14,24 @@ use App\Modules\Settings\SettingsServiceProvider;
 use App\Modules\Shipping\ShippingServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\Filament\AdminPanelProvider;
+use App\Providers\HorizonServiceProvider;
 use Filament\FilamentServiceProvider;
 
 return [
-    AppServiceProvider::class,
-    FilamentServiceProvider::class,
-    AdminPanelProvider::class,
     CartServiceProvider::class,
     CatalogServiceProvider::class,
     CustomersServiceProvider::class,
     InventoryServiceProvider::class,
+    LoyaltyServiceProvider::class,
     NotificationsServiceProvider::class,
     OrdersServiceProvider::class,
     PaymentsServiceProvider::class,
     PromotionServiceProvider::class,
-    LoyaltyServiceProvider::class,
     ReturnsServiceProvider::class,
     SettingsServiceProvider::class,
     ShippingServiceProvider::class,
+    AppServiceProvider::class,
+    AdminPanelProvider::class,
+    HorizonServiceProvider::class,
+    FilamentServiceProvider::class,
 ];

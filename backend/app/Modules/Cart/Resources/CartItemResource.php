@@ -8,12 +8,12 @@ use App\Modules\Cart\Models\CartItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin CartItem */
 class CartItemResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        /** @var CartItem $this */
         $variant = $this->variant;
 
         return [

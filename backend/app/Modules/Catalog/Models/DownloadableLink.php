@@ -9,6 +9,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $product_id
+ * @property string $name_en
+ * @property string $name_ar
+ * @property string $file_path
+ * @property int $downloads_allowed
+ * @property int $sort_order
+ */
 class DownloadableLink extends Model
 {
     protected $fillable = [
@@ -25,11 +34,13 @@ class DownloadableLink extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
+    /** @return HasMany<DownloadableLinkPurchase, $this> */
     public function purchases(): HasMany
     {
         return $this->hasMany(DownloadableLinkPurchase::class);

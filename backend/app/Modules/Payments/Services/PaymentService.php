@@ -153,7 +153,10 @@ class PaymentService
         return ['event' => 'captured', 'order' => $order];
     }
 
-    /** @return array{event: string, order: Order} */
+    /**
+     * @param  array<string, mixed>  $tapCharge
+     * @return array{event: string, order: Order}
+     */
     private function handleFailed(TapTransaction $transaction, array $tapCharge): array
     {
         $transaction->status = 'failed';
@@ -192,7 +195,7 @@ class PaymentService
                 'email' => $user->email,
                 'phone' => [
                     'country_code' => '973',
-                    'number' => $user->profile?->phone ?? '',
+                    'number' => $user->profile->phone ?? '',
                 ],
             ]);
 
@@ -206,6 +209,7 @@ class PaymentService
         }
     }
 
+    /** @return array<string, mixed> */
     private function buildChargePayload(Order $order, ?User $user, int $attemptNumber): array
     {
         $amountDecimal = number_format($order->total_fils / 1000, 3, '.', '');
@@ -239,6 +243,7 @@ class PaymentService
         return $payload;
     }
 
+    /** @return array<string, mixed> */
     private function buildCustomerPayload(Order $order, ?User $user): array
     {
         if ($user) {
@@ -249,7 +254,7 @@ class PaymentService
                 'email' => $user->email,
                 'phone' => [
                     'country_code' => '973',
-                    'number' => $profile?->phone ?? '',
+                    'number' => $profile->phone ?? '',
                 ],
             ];
         }

@@ -142,6 +142,7 @@ class CouponResource extends Resource
         ];
     }
 
+    /** @return array<int, class-string> */
     public static function getRelationManagers(): array
     {
         return [

@@ -79,12 +79,9 @@ class InvoiceService
                 $productName = $item->product_name;
                 $nameEn = '';
                 $nameAr = '';
-                if (is_array($productName)) {
+                if ($productName !== null) {
                     $nameEn = (string) ($productName['en'] ?? '');
                     $nameAr = (string) ($productName['ar'] ?? '');
-                } else {
-                    $nameEn = (string) ($productName ?? '');
-                    $nameAr = (string) ($productName ?? '');
                 }
 
                 $lineItems[] = [

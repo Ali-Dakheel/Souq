@@ -5,9 +5,28 @@ declare(strict_types=1);
 namespace App\Modules\Customers\Models;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $address_type
+ * @property string $recipient_name
+ * @property string $phone
+ * @property string $governorate
+ * @property string|null $district
+ * @property string $street_address
+ * @property string|null $building_number
+ * @property string|null $apartment_number
+ * @property string|null $postal_code
+ * @property string|null $delivery_instructions
+ * @property bool $is_default
+ * @property bool $is_active
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ */
 class CustomerAddress extends Model
 {
     protected $fillable = [
@@ -37,6 +56,7 @@ class CustomerAddress extends Model
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

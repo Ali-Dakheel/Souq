@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Notifications\Mail;
 
+use App\Models\User;
 use App\Modules\Orders\Models\Order;
 use App\Modules\Payments\Models\TapTransaction;
 use Illuminate\Bus\Queueable;
@@ -28,8 +29,16 @@ class PaymentReceiptMail extends Mailable implements ShouldQueue
     {
         app()->setLocale($this->order->locale ?? 'ar');
 
+        $userId = $this->order->user_id;
+        $email = $userId !== null && ($user = User::find($userId)) !== null
+            ? $user->email
+            : $this->order->guest_email;
+        if ($email === null) {
+            throw new \LogicException('Order '.$this->order->order_number.' has no recipient email.');
+        }
+
         return new Envelope(
-            to: $this->order->user?->email ?? $this->order->guest_email,
+            to: [$email],
             subject: __('emails.payment_receipt.subject', ['number' => $this->order->order_number]),
         );
     }
@@ -47,6 +56,7 @@ class PaymentReceiptMail extends Mailable implements ShouldQueue
         );
     }
 
+    /** @return list<string> */
     public function tags(): array
     {
         return ['payment-receipt'];

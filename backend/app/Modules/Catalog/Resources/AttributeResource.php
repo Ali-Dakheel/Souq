@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Resources;
 
+use App\Modules\Catalog\Models\Attribute;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin Attribute */
 class AttributeResource extends JsonResource
 {
     /**
@@ -29,8 +31,8 @@ class AttributeResource extends JsonResource
                 'display_value' => $value->display_value,
                 'sort_order' => $value->sort_order,
             ])),
-            'created_at' => $this->created_at?->toIso8601String(),
-            'updated_at' => $this->updated_at?->toIso8601String(),
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }

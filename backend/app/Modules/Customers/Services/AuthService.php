@@ -13,7 +13,6 @@ use App\Modules\Customers\Events\PasswordResetRequested;
 use App\Modules\Customers\Models\CustomerProfile;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Events\PasswordReset as LaravelPasswordReset;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
@@ -58,6 +57,7 @@ class AuthService
      * Authenticate a customer and issue a Sanctum API token.
      *
      * @return array{user: User, token: string}
+     *
      * @throws AuthenticationException
      */
     public function login(string $email, string $password, ?string $guestSessionId = null): array

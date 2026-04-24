@@ -118,7 +118,7 @@ class WishlistTest extends TestCase
         $response->assertJsonPath('data.items.0.variant.id', $variant->id);
         $response->assertJsonPath('data.items.0.variant.sku', $variant->sku);
         $response->assertJsonPath('data.items.0.variant.product.id', $product->id);
-        $response->assertJsonPath('data.items.0.variant.product.name_en', $product->name_en);
+        $response->assertJsonPath('data.items.0.variant.product.name_en', $product->name['en']);
     }
 
     // ========================================================================

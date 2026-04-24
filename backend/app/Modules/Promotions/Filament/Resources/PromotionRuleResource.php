@@ -9,6 +9,8 @@ use App\Modules\Promotions\Filament\Resources\PromotionRuleResource\Pages\EditPr
 use App\Modules\Promotions\Filament\Resources\PromotionRuleResource\Pages\ListPromotionRules;
 use App\Modules\Promotions\Models\PromotionRule;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -17,8 +19,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use UnitEnum;

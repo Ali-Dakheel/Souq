@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Orders\Resources;
 
+use App\Modules\Orders\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin InvoiceItem */
 class InvoiceItemResource extends JsonResource
 {
+    /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
         return [

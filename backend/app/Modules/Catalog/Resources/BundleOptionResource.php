@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Resources;
 
+use App\Modules\Catalog\Models\BundleOption;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin BundleOption */
 class BundleOptionResource extends JsonResource
 {
     /**

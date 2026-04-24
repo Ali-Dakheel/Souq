@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Catalog\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property array<string, string> $name
+ * @property string $slug
+ * @property array<string, string>|null $description
+ * @property int|null $category_id
+ * @property int $base_price_fils
+ * @property bool $is_available
+ * @property array<int, string>|null $images
+ * @property int $sort_order
+ * @property string $product_type
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Product extends Model
 {
     use Searchable, SoftDeletes;
@@ -37,16 +53,19 @@ class Product extends Model
         'sort_order' => 'integer',
     ];
 
+    /** @return BelongsTo<Category, $this> */
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
+    /** @return HasMany<Variant, $this> */
     public function variants(): HasMany
     {
         return $this->hasMany(Variant::class)->orderBy('sort_order');
     }
 
+    /** @return BelongsToMany<ProductTag, $this> */
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -57,16 +76,19 @@ class Product extends Model
         );
     }
 
+    /** @return HasMany<ProductReview, $this> */
     public function reviews(): HasMany
     {
         return $this->hasMany(ProductReview::class);
     }
 
+    /** @return HasMany<BundleOption, $this> */
     public function bundleOptions(): HasMany
     {
         return $this->hasMany(BundleOption::class);
     }
 
+    /** @return HasMany<DownloadableLink, $this> */
     public function downloadableLinks(): HasMany
     {
         return $this->hasMany(DownloadableLink::class);
@@ -97,16 +119,28 @@ class Product extends Model
         return $this->product_type === 'configurable';
     }
 
+    /**
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
     public function scopeAvailable(Builder $query): Builder
     {
         return $query->where('is_available', true);
     }
 
+    /**
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
     public function scopeByCategory(Builder $query, int $categoryId): Builder
     {
         return $query->where('category_id', $categoryId);
     }
 
+    /**
+     * @param  Builder<Product>  $query
+     * @return Builder<Product>
+     */
     public function scopeByTag(Builder $query, int $tagId): Builder
     {
         return $query->whereHas(

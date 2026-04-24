@@ -14,14 +14,14 @@ use App\Modules\Orders\Filament\Resources\OrderResource\RelationManagers\StatusH
 use App\Modules\Orders\Models\Order;
 use App\Modules\Orders\Services\OrderService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -176,6 +176,7 @@ class OrderResource extends Resource
             ]);
     }
 
+    /** @return array<int, class-string> */
     public static function getRelationManagers(): array
     {
         return [

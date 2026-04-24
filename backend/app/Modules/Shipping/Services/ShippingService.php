@@ -60,6 +60,8 @@ class ShippingService
      * Returns cached array of ['method' => ShippingMethod, 'rate_fils' => int].
      * Returns empty array if cart is virtual or no zone found for address.
      * Silently skips unsupported method types.
+     *
+     * @return list<array{method: ShippingMethod, rate_fils: int}>
      */
     public function getAvailableRates(Cart $cart, CustomerAddress $address): array
     {

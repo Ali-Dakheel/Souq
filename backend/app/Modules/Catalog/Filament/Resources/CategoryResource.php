@@ -10,11 +10,11 @@ use App\Modules\Catalog\Filament\Resources\CategoryResource\Pages\ListCategories
 use App\Modules\Catalog\Filament\Resources\CategoryResource\RelationManagers\ChildCategoriesRelationManager;
 use App\Modules\Catalog\Models\Category;
 use BackedEnum;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;

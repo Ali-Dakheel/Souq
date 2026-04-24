@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Modules\Shipping\Resources;
 
+use App\Modules\Shipping\Models\OrderShipping;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/** @mixin OrderShipping */
 class OrderShippingResource extends JsonResource
 {
     /** @return array<string, mixed> */

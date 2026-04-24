@@ -21,6 +21,9 @@ class ReturnService
 {
     private const RETURN_WINDOW_DAYS = 14;
 
+    /**
+     * @param  list<array{order_item_id: int, quantity_returned: int, condition: string}>  $items
+     */
     public function createRequest(
         Order $order,
         User $user,
